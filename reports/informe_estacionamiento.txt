@@ -1,0 +1,3 @@
+Num placa    Tiempo estacionado (min)  Cantidad a pagar    
+----------------------------------------------
+LNQ068       16                        0.80                

@@ -1,0 +1,15 @@
+{
+  "description": "This file contains additional Spring configuration metadata for custom properties.",
+  "properties": [
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "Specifies the expiration time for JSON Web Tokens (JWT) in milliseconds."
+    },
+    {
+      "name": "secret-key",
+      "type": "java.lang.String",
+      "description": "Specifies the secret key used for encryption or authentication purposes. Ensure this key is kept secure and not exposed in public repositories or logs."
+    }
+  ]
+}
