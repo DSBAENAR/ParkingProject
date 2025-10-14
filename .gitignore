@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+docs/apidocs/*
+!docs/apidocs/index.html
