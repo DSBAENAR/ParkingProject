@@ -10,6 +10,16 @@
       "name": "secret-key",
       "type": "java.lang.String",
       "description": "Specifies the secret key used for encryption or authentication purposes. Ensure this key is kept secure and not exposed in public repositories or logs."
+    },
+    {
+      "name": "sk_stripe",
+      "type": "java.lang.String",
+      "description": "A description for 'sk_stripe'"
+    },
+    {
+      "name": "baseUrl",
+      "type": "java.lang.String",
+      "description": "A description for 'baseUrl'"
     }
   ]
 }

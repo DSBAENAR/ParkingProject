@@ -98,6 +98,7 @@ public class SecurityConfig {
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
                                             .requestMatchers("/h2-console/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
+                                            .requestMatchers("/api/customers/**").permitAll()
                                             .anyRequest().authenticated())
             .authenticationProvider(authenticationProvider(passwordEncoder()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
