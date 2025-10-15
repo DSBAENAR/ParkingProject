@@ -3,7 +3,7 @@ package com.parking.core.payment.response;
 import java.util.Map;
 
 import com.parking.core.enums.Currencies;
-import com.parking.core.payment.handlers.UserAddress;
+import com.parking.core.payment.Requests.UserAddress;
 
 public record CustomerResponse(
     String id,
