@@ -90,6 +90,12 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>30.0.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
