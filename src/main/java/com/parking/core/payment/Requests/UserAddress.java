@@ -1,8 +1,14 @@
 package com.parking.core.payment.Requests;
 
+/**
+ * Represents a user's address with details such as country, city, and address line.
+ *
+ * @param country The country where the user resides.
+ * @param city The city where the user resides.
+ * @param line1 The first line of the user's address (e.g., street address or PO box).
+ */
 public record UserAddress(
     String country,
     String city,
     String line1
-) {
-}
+) {}

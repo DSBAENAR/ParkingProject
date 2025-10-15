@@ -12,6 +12,13 @@ import com.stripe.param.InvoiceCreateParams;
 @Service
 public class InvoiceService {
 
+    /**
+     * Creates an invoice for a user based on the provided invoice request.
+     *
+     * @param customer The invoice request containing customer details and currency information.
+     * @return An InvoiceResponse object containing the invoice ID, currency, and customer information.
+     * @throws StripeException If an error occurs while creating the invoice using the Stripe API.
+     */
     public InvoiceResponse createAnInvoceForAUser(InvoiceRequest customer) throws StripeException{
         InvoiceCreateParams invoiceParams = InvoiceCreateParams
         .builder()
