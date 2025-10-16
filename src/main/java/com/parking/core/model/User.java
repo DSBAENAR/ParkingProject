@@ -1,7 +1,9 @@
 package com.parking.core.model;
 
 import com.parking.core.enums.Roles;
+import com.parking.core.payment.Requests.UserAddress;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -29,14 +31,17 @@ public class User {
 
     private String password;
 
+    @Embedded
+    private UserAddress address;
 
     public User(){}
 
-    public User(String name, String username, Roles role, String email){
+    public User(String name, String username, Roles role, String email, UserAddress userAddress){
         this.name = name;
         this.username = username;
         this.role = role;
         this.email = email;
+        this.address = userAddress;
     }
 
     public String getName() {
@@ -77,4 +82,13 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public UserAddress getAddress() {
+        return address;
+    }
+
+    public void setAddress(UserAddress address) {
+        this.address = address;
+    }
+    
 }

@@ -1,5 +1,9 @@
 package com.parking.core.model;
 
+/**
+ * The Product class represents a product with an identifier, the number of hours,
+ * and the price associated with it.
+ */
 public class Product {
     String id;
     Integer hours;
