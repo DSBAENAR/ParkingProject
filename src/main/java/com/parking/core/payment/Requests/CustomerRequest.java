@@ -1,5 +1,6 @@
 package com.parking.core.payment.Requests;
 
+
 /**
  * Represents a request containing customer information.
  * This record is used to encapsulate the details of a customer.

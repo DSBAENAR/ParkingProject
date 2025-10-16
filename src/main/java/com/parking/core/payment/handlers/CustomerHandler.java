@@ -6,7 +6,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.payment.Requests.CustomerRequest;
 import com.parking.core.payment.services.CustomerService;
-import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 
 import java.util.Map;
@@ -23,7 +22,6 @@ public class CustomerHandler {
 
     public CustomerHandler(CustomerService customerService) {
         this.customerService = customerService;
-        Stripe.apiKey = "sk_test_51SIH8RDp6pIK4lk7GYKHBBjVxc1VqVNY4aksZQKW8UutDXCLWkt0HkUxp9pIjxgkaEnuTfHWSU3v4D6HVFjuEcdJ00TZKnEY2i";
     }
 
     @PostMapping("/customer")

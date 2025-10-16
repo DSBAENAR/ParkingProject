@@ -100,6 +100,7 @@ public class SecurityConfig {
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").permitAll()
                                             .requestMatchers("/api/invoices/**").permitAll()
+                                            .requestMatchers("/api/cards/**").permitAll()
                                             .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authenticationProvider(authenticationProvider(passwordEncoder()))
