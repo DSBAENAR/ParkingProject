@@ -1,6 +1,9 @@
 package com.parking.core.payment.response;
 
+import java.util.Map;
+
 import com.parking.core.enums.Currencies;
+import com.parking.core.payment.Requests.UserTax;
 
 /**
  * Represents the response for an invoice in the payment system.
@@ -14,5 +17,7 @@ import com.parking.core.enums.Currencies;
 public record InvoiceResponse(
     String id,
     Currencies currency,
-    String customer
+    String customer,
+    UserTax tax,
+    Map<String,Object> productInfo
 ) {}

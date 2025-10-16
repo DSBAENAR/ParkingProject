@@ -13,7 +13,9 @@ import com.parking.core.payment.response.CustomerResponse;
 import com.parking.core.repository.UserRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
+import com.stripe.model.CustomerCollection;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.CustomerListParams;
 
 @Service
 public class CustomerService {
@@ -24,16 +26,32 @@ public class CustomerService {
     }
 
     public CustomerResponse addNewCustomer(CustomerRequest user) throws StripeException{
-        CustomerCreateParams newCustomer = CustomerCreateParams
-        .builder()
-        .setEmail(user.email())
-        .setName(user.name())
-        .setAddress(CustomerCreateParams.Address
+        CustomerListParams listParams =
+            CustomerListParams
+            .builder()
+            .setEmail(user.email())
+            .setLimit(1L)
+            .build();
+
+        CustomerCollection existingCustomers = Customer.list(listParams);
+
+        if (!existingCustomers.getData().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+            "Stripe customer already exists");
+        }
+
+        var address = CustomerCreateParams.Address
             .builder()
             .setCity(user.address().city())
             .setCountry(user.address().country())
             .setLine1(user.address().line1())
-            .build())
+            .build();
+
+        CustomerCreateParams newCustomer = CustomerCreateParams
+        .builder()
+        .setEmail(user.email())
+        .setName(user.name())
+        .setAddress(address)
         .build();
 
         if (newCustomer == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer can't be null");

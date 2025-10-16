@@ -8,7 +8,7 @@ import com.stripe.net.RequestOptions;
 
 @Configuration
 public class RequestConfig {
-    @Value("${sk_stripe}")
+    @Value("${secret-key}")
     String apiKey;
     @Bean
     RequestOptions requestOptions (){
