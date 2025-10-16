@@ -99,7 +99,9 @@ public class SecurityConfig {
                                             .requestMatchers("/h2-console/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").permitAll()
+                                            .requestMatchers("/api/invoices/**").permitAll()
                                             .anyRequest().authenticated())
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authenticationProvider(authenticationProvider(passwordEncoder()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
