@@ -2,6 +2,7 @@ package com.parking.core.payment.handlers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.payment.Requests.CustomerRequest;
 import com.parking.core.payment.services.CustomerService;
@@ -32,6 +33,10 @@ public class CustomerHandler {
                 "message","Customer created correctly",
                 "customer",customerService.addNewCustomer(toAdd)
             ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity
+            .status(e.getStatusCode())
+            .body(Map.of("message",e.getReason()));
         } catch (StripeException e) {
             return ResponseEntity
             .status(e.getStatusCode())
