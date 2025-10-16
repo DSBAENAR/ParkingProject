@@ -10,7 +10,6 @@ import com.parking.core.enums.Currencies;
 import com.parking.core.payment.Requests.CustomerRequest;
 import com.parking.core.payment.Requests.UserAddress;
 import com.parking.core.payment.response.CustomerResponse;
-import com.parking.core.repository.UserRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.CustomerCollection;
@@ -19,11 +18,6 @@ import com.stripe.param.CustomerListParams;
 
 @Service
 public class CustomerService {
-    private final UserRepository userRepository;
-
-    public CustomerService(UserRepository userRepository){
-        this.userRepository = userRepository;
-    }
 
     public CustomerResponse addNewCustomer(CustomerRequest user) throws StripeException{
         CustomerListParams listParams =
