@@ -8,19 +8,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.enums.Currencies;
-import com.parking.core.payment.CardInfo;
-import com.parking.core.payment.UserPaymentMethod;
 import com.parking.core.payment.Requests.CustomerRequest;
 import com.parking.core.payment.Requests.UserAddress;
 import com.parking.core.payment.response.CustomerResponse;
+import com.parking.core.payment.utils.CardInfo;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.CustomerCollection;
 import com.stripe.model.PaymentMethod;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerListParams;
-import com.stripe.param.PaymentMethodAttachParams;
-import com.stripe.param.PaymentMethodCreateParams;
 
 @Service
 public class CustomerService {
@@ -66,17 +63,6 @@ public class CustomerService {
         
         var created = Customer.create(newCustomer);
 
-        var payment_method = attachCardToCustomer(created.getId());
-
-        Map<String,Object> checks = new HashMap<>();
-        checks.put("checks",payment_method.getCard().getChecks());
-        var userCardInfo = getCardInfoCustomer(payment_method);
-
-        var userPaymentMethod = new UserPaymentMethod(
-            payment_method.getId(),
-            Map.of("Details", payment_method.getBillingDetails()),
-            userCardInfo
-        );
 
         return new CustomerResponse(
             created.getId(), 
@@ -90,24 +76,8 @@ public class CustomerService {
             Currencies.COP,
             created.getCreated(), 
             created.getEmail(), 
-            new HashMap<>(created.getMetadata()),
-            userPaymentMethod);
+            new HashMap<>(created.getMetadata()));
             
-    }
-
-    public PaymentMethod attachCardToCustomer(String customerId) throws StripeException {
-        PaymentMethodCreateParams params = PaymentMethodCreateParams.builder()
-            .setType(PaymentMethodCreateParams.Type.CARD)
-            .putExtraParam("card[token]", "tok_visa")
-            .build();
-
-        PaymentMethod payment = PaymentMethod.create(params);
-
-        payment.attach(PaymentMethodAttachParams.builder()
-            .setCustomer(customerId)
-            .build());
-
-        return payment;
     }
 
 

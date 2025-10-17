@@ -1,4 +1,4 @@
-package com.parking.core.payment;
+package com.parking.core.payment.utils;
 
 import java.util.Map;
 
@@ -13,7 +13,7 @@ public record CardInfo(
     Integer expYear,
     String funding,
     String last4,
-    Map<String,Object> checks
+    Object checks
 
 ) {
     

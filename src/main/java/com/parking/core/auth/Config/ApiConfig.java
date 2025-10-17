@@ -11,7 +11,7 @@ import jakarta.annotation.PostConstruct;
 @Component
 public class ApiConfig {
 
-    @Value("${SECRET_KEY}")
+    @Value("${sk_stripe}")
     private String key;
 
     @PostConstruct
