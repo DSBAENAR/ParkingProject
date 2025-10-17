@@ -28,6 +28,4 @@ public record CardInfo(
     String last4,
     Object checks
 
-) {
-    
-}
+) {}
