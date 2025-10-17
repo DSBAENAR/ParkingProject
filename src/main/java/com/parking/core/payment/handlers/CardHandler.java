@@ -19,6 +19,16 @@ public class CardHandler {
         this.cardService = cardService;
     }
 
+    /**
+     * Handles the HTTP POST request to add a card and attach it to a customer.
+     *
+     * @param request the {@link CardRequest} object containing the card details
+     *                and customer information.
+     * @return a {@link ResponseEntity} containing the result of the operation:
+     *         - HTTP 200 OK with the attached card details if successful.
+     *         - HTTP 500 Internal Server Error with the error message if a
+     *           {@link StripeException} occurs.
+     */
     @PostMapping("/card")
     public ResponseEntity<?> addCard(@RequestBody CardRequest request){
         try {

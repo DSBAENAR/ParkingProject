@@ -24,6 +24,15 @@ public class CustomerHandler {
         this.customerService = customerService;
     }
 
+    /**
+     * Handles the creation of a new customer.
+     *
+     * @param toAdd the customer request object containing the details of the customer to be added.
+     * @return a ResponseEntity containing a success message and the created customer object if the operation is successful,
+     *         or an error message with the appropriate HTTP status code in case of an exception.
+     * @throws ResponseStatusException if there is an issue with the request, such as invalid input.
+     * @throws StripeException if there is an issue with the Stripe payment processing.
+     */
     @PostMapping("/customer")
     public ResponseEntity<?> addCustomer(@RequestBody CustomerRequest toAdd) {
         try {

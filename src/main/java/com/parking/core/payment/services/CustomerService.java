@@ -81,20 +81,16 @@ public class CustomerService {
     }
 
 
-    public CardInfo getCardInfoCustomer(PaymentMethod paymentMethod){
-       return new CardInfo(
-            paymentMethod.getCard().getBrand(), 
-            paymentMethod.getType(), 
-            paymentMethod.getCard().getCountry(), 
-            paymentMethod.getCard().getExpMonth().intValue(),
-            paymentMethod.getCard().getExpYear().intValue(), 
-            paymentMethod.getCard().getFunding(), 
-            paymentMethod.getCard().getLast4(),
-            Map.of("checks",paymentMethod.getCard().getChecks()));
-    }
-
     
-    public CustomerCreateParams.Address addAdrresToUser(String city, String country, String line1){
+    /**
+     * Creates and returns a CustomerCreateParams.Address object with the specified details.
+     *
+     * @param city    the city of the address
+     * @param country the country of the address
+     * @param line1   the first line of the address
+     * @return a CustomerCreateParams.Address object containing the provided address details
+     */
+    private CustomerCreateParams.Address addAdrresToUser(String city, String country, String line1){
         var address = CustomerCreateParams.Address
         .builder()
         .setCity(city)

@@ -23,8 +23,16 @@ public class InvoiceHandler {
         this.invoiceService = invoiceService;
     }
 
+    /**
+     * Handles the creation of an invoice for a user.
+     *
+     * @param request the {@link InvoiceRequest} object containing the details needed to create the invoice.
+     * @return a {@link ResponseEntity} containing a success message and the created invoice if successful,
+     *         or an error message if an exception occurs.
+     * @throws StripeException if there is an error during the invoice creation process.
+     */
     @PostMapping("/invoice")
-    public ResponseEntity<?> getMethodName(@RequestBody InvoiceRequest request) {
+    public ResponseEntity<?> addInvoice(@RequestBody InvoiceRequest request) {
         try {
             return ResponseEntity.ok(Map.of(
                 "message", "Invoice created correctly",
