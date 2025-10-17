@@ -1,6 +1,6 @@
 # Parking Core Service
 
-A Spring Boot RESTful API for parking lot management with JWT authentication, Redis-based token blacklisting, and H2 database. This service handles vehicle registration, parking session tracking, payment calculation, and monthly reporting.
+A Spring Boot RESTful API for parking lot management with JWT authentication, Redis-based token blacklisting, Stripe payment integration, and H2 database. This service handles vehicle registration, parking session tracking, payment calculation, customer management, invoice generation, and monthly reporting.
 
 ## Table of Contents
 
@@ -17,6 +17,7 @@ A Spring Boot RESTful API for parking lot management with JWT authentication, Re
   - [Parking Registers](#parking-registers)
   - [Users](#users)
   - [Reports](#reports)
+  - [Payments (Stripe)](#payments-stripe)
 - [Authentication & Security](#authentication--security)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
@@ -28,7 +29,8 @@ A Spring Boot RESTful API for parking lot management with JWT authentication, Re
 - 🚗 Vehicle management (CRUD operations)
 - 📝 Parking session tracking (entry/exit timestamps)
 - 💰 Automatic payment calculation based on parking duration and vehicle type
-- 📊 Monthly resident vehicle reports
+- � **Stripe integration** for payment processing (customers, cards, invoices)
+- �📊 Monthly resident vehicle reports
 - 🔒 Token blacklisting on logout using Redis
 - 💾 H2 in-memory/file database for development
 - 🎯 RESTful API design with comprehensive error handling
@@ -41,6 +43,7 @@ A Spring Boot RESTful API for parking lot management with JWT authentication, Re
 - **Spring Data JPA** (ORM)
 - **H2 Database** (development)
 - **Redis** (token blacklist)
+- **Stripe API** (payment processing)
 - **Maven** (build tool)
 - **JJWT** (JWT library)
 
@@ -60,6 +63,10 @@ Before you begin, ensure you have the following installed:
   - Verify: `redis-cli ping` (should return `PONG`)
   - Install on macOS: `brew install redis`
   - Install with Docker: `docker pull redis:7`
+
+- **Stripe Account** (optional, for payment features)
+  - Sign up at [stripe.com](https://stripe.com)
+  - Get your test API keys from the [Dashboard](https://dashboard.stripe.com/test/apikeys)
 
 - **Git** (optional, for cloning)
   - Verify: `git --version`
@@ -84,6 +91,7 @@ mvn clean install
 ```
 
 This will:
+
 - Download Spring Boot, H2, Redis, JWT, and other dependencies
 - Compile the source code
 - Run tests (use `-DskipTests` to skip)
@@ -106,6 +114,7 @@ Configuration is stored in `src/main/resources/application.properties`. Key sett
 | `spring.data.redis.port` | Redis server port | `6379` |
 | `secret-key` | JWT signing secret key | _(see file)_ |
 | `jwt.expiration` | Token expiration time (ms) | `3600000` (1 hour) |
+| `sk_stripe` | Stripe API secret key | _(from environment variable)_ |
 
 ### Environment Variables (Recommended for Production)
 
@@ -116,6 +125,7 @@ For security, use environment variables instead of hardcoded values:
 ```bash
 # .env
 SECRET_KEY=your-secure-secret-key-here
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
 SPRING_DATASOURCE_URL=jdbc:h2:file:./data/parkingdb
 SPRING_DATA_REDIS_HOST=localhost
 SPRING_DATA_REDIS_PORT=6379
@@ -134,6 +144,9 @@ spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}
 
 secret-key=${SECRET_KEY:BvqnIMmUVXd7je2b8zs4EJoY5ZP0mV1i8aZLEffu9bE=}
 jwt.expiration=${JWT_EXPIRATION:3600000}
+
+# Stripe configuration
+sk_stripe=${STRIPE_SECRET_KEY}
 ```
 
 3. Load environment variables before running:
@@ -187,6 +200,37 @@ Verify Redis is running:
 redis-cli ping
 # Should return: PONG
 ```
+
+### Stripe Setup
+
+The application integrates with **Stripe** for payment processing (customers, cards, and invoices).
+
+**Get your Stripe API Keys:**
+
+1. Sign up for a free Stripe account at [stripe.com](https://stripe.com)
+2. Navigate to [Dashboard → Developers → API Keys](https://dashboard.stripe.com/test/apikeys)
+3. Copy your **Secret key** (starts with `sk_test_` for test mode)
+4. Add it to your `.env` file:
+
+```bash
+STRIPE_SECRET_KEY=sk_test_51abc...your_secret_key
+```
+
+**Test Mode vs Live Mode:**
+
+- **Test mode** (`sk_test_`): Use test card numbers, no real charges
+- **Live mode** (`sk_live_`): Real transactions, production use only
+
+**Test Cards for Development:**
+
+```text
+Card Number: 4242 4242 4242 4242
+Exp: Any future date (e.g., 12/34)
+CVC: Any 3 digits (e.g., 123)
+ZIP: Any 5 digits (e.g., 12345)
+```
+
+For more test cards, see [Stripe Test Cards](https://stripe.com/docs/testing).
 
 ## Running the Application
 
@@ -838,6 +882,367 @@ curl -X GET http://localhost:8080/api/v1/parking/reports/monthly \
   -H "Authorization: Bearer <token>"
 ```
 
+### Payments (Stripe)
+
+The application integrates with Stripe to handle payment processing, including customer creation, card management, and invoice generation.
+
+⚠️ **Important:** Make sure you have configured your `STRIPE_SECRET_KEY` environment variable before using these endpoints.
+
+#### 1. Create Customer
+
+**Endpoint:** `POST /api/customers/customer`
+
+**Description:** Creates a new customer in Stripe with their billing information.
+
+**Request Body:**
+
+```json
+{
+  "id": "user123",
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "address": {
+    "country": "US",
+    "city": "New York",
+    "line1": "123 Main Street"
+  }
+}
+```
+
+**Address Fields:**
+
+- `country`: Two-letter country code (e.g., "US", "MX", "CA")
+- `city`: City name
+- `line1`: Street address or PO box
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Customer created correctly",
+  "customer": {
+    "id": "cus_ABC123XYZ",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "address": {
+      "city": "New York",
+      "country": "US",
+      "line1": "123 Main Street",
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "balance": 0,
+    "created": 1697500800,
+    "currency": "usd",
+    "default_source": null,
+    "delinquent": false,
+    "description": null,
+    "discount": null,
+    "invoice_prefix": "ABC1234",
+    "livemode": false
+  }
+}
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST http://localhost:8080/api/customers/customer \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "id": "user123",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "address": {
+      "country": "US",
+      "city": "New York",
+      "line1": "123 Main Street"
+    }
+  }'
+```
+
+#### 2. Add Card to Customer
+
+**Endpoint:** `POST /api/cards/card`
+
+**Description:** Attaches a payment method (card) to an existing customer.
+
+**Request Body:**
+
+```json
+{
+  "customer": {
+    "id": "user123",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "address": {
+      "country": "US",
+      "city": "New York",
+      "line1": "123 Main Street"
+    }
+  },
+  "cvc": "123",
+  "expMonth": 12,
+  "expYear": 2025,
+  "number": "4242424242424242",
+  "currency": "USD"
+}
+```
+
+**Card Fields:**
+
+- `number`: Card number (use test cards in development)
+- `expMonth`: Expiration month (1-12)
+- `expYear`: Expiration year (e.g., 2025)
+- `cvc`: Card verification code (3-4 digits)
+- `currency`: Currency code (USD, EUR, MXN, etc.)
+
+**Supported Currencies:**
+
+- `USD` - US Dollar
+- `EUR` - Euro
+- `MXN` - Mexican Peso
+- `GBP` - British Pound
+- `CAD` - Canadian Dollar
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "pm_1ABC123XYZ",
+  "object": "payment_method",
+  "billing_details": {
+    "address": {
+      "city": "New York",
+      "country": "US",
+      "line1": "123 Main Street",
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "john.doe@example.com",
+    "name": "John Doe",
+    "phone": null
+  },
+  "card": {
+    "brand": "visa",
+    "checks": {
+      "address_line1_check": null,
+      "address_postal_code_check": null,
+      "cvc_check": "pass"
+    },
+    "country": "US",
+    "exp_month": 12,
+    "exp_year": 2025,
+    "fingerprint": "ABC123XYZ",
+    "funding": "credit",
+    "last4": "4242",
+    "networks": {
+      "available": ["visa"],
+      "preferred": null
+    }
+  },
+  "created": 1697500800,
+  "customer": "cus_ABC123XYZ",
+  "livemode": false,
+  "type": "card"
+}
+```
+
+**Test Cards:**
+
+```text
+Visa (Success): 4242 4242 4242 4242
+Visa (Declined): 4000 0000 0000 0002
+Mastercard: 5555 5555 5555 4444
+American Express: 3782 822463 10005
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST http://localhost:8080/api/cards/card \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "customer": {
+      "id": "user123",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "address": {
+        "country": "US",
+        "city": "New York",
+        "line1": "123 Main Street"
+      }
+    },
+    "cvc": "123",
+    "expMonth": 12,
+    "expYear": 2025,
+    "number": "4242424242424242",
+    "currency": "USD"
+  }'
+```
+
+#### 3. Create Invoice
+
+**Endpoint:** `POST /api/invoices/invoice`
+
+**Description:** Creates an invoice for a customer based on parking hours and price.
+
+**Request Body:**
+
+```json
+{
+  "customer": "cus_ABC123XYZ",
+  "currency": "USD",
+  "product": {
+    "hours": 5,
+    "price": 2500
+  }
+}
+```
+
+**Product Fields:**
+
+- `hours`: Number of parking hours
+- `price`: Total price in **cents** (e.g., 2500 = $25.00)
+
+**Currency Options:**
+
+- `USD`, `EUR`, `MXN`, `GBP`, `CAD`
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Invoice created correctly",
+  "invoice": {
+    "id": "in_1ABC123XYZ",
+    "object": "invoice",
+    "amount_due": 2500,
+    "amount_paid": 0,
+    "amount_remaining": 2500,
+    "attempt_count": 0,
+    "attempted": false,
+    "auto_advance": false,
+    "billing_reason": "manual",
+    "collection_method": "charge_automatically",
+    "created": 1697500800,
+    "currency": "usd",
+    "customer": "cus_ABC123XYZ",
+    "customer_email": "john.doe@example.com",
+    "customer_name": "John Doe",
+    "description": "Parking fee for 5 hours",
+    "hosted_invoice_url": "https://invoice.stripe.com/i/acct_xxx/test_xxx",
+    "invoice_pdf": "https://pay.stripe.com/invoice/acct_xxx/test_xxx/pdf",
+    "lines": {
+      "data": [
+        {
+          "id": "il_1ABC123XYZ",
+          "amount": 2500,
+          "currency": "usd",
+          "description": "Parking - 5 hours",
+          "quantity": 1
+        }
+      ]
+    },
+    "livemode": false,
+    "paid": false,
+    "status": "draft",
+    "subtotal": 2500,
+    "total": 2500
+  }
+}
+```
+
+**Invoice URLs:**
+
+- `hosted_invoice_url`: Customer-facing payment page
+- `invoice_pdf`: Downloadable PDF invoice
+
+**cURL Example:**
+
+```bash
+curl -X POST http://localhost:8080/api/invoices/invoice \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "customer": "cus_ABC123XYZ",
+    "currency": "USD",
+    "product": {
+      "hours": 5,
+      "price": 2500
+    }
+  }'
+```
+
+**Complete Payment Flow Example:**
+
+```bash
+# 1. Create a customer
+CUSTOMER_RESPONSE=$(curl -s -X POST http://localhost:8080/api/customers/customer \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "id": "user123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "address": {
+      "country": "US",
+      "city": "New York",
+      "line1": "123 Main St"
+    }
+  }')
+
+CUSTOMER_ID=$(echo $CUSTOMER_RESPONSE | jq -r '.customer.id')
+echo "Customer ID: $CUSTOMER_ID"
+
+# 2. Add a payment method (card)
+curl -X POST http://localhost:8080/api/cards/card \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d "{
+    \"customer\": {
+      \"id\": \"user123\",
+      \"name\": \"John Doe\",
+      \"email\": \"john@example.com\",
+      \"address\": {
+        \"country\": \"US\",
+        \"city\": \"New York\",
+        \"line1\": \"123 Main St\"
+      }
+    },
+    \"cvc\": \"123\",
+    \"expMonth\": 12,
+    \"expYear\": 2025,
+    \"number\": \"4242424242424242\",
+    \"currency\": \"USD\"
+  }"
+
+# 3. Create an invoice for 5 hours of parking ($25.00)
+curl -X POST http://localhost:8080/api/invoices/invoice \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d "{
+    \"customer\": \"$CUSTOMER_ID\",
+    \"currency\": \"USD\",
+    \"product\": {
+      \"hours\": 5,
+      \"price\": 2500
+    }
+  }"
+```
+
+**Notes:**
+
+- All prices must be in **cents** (smallest currency unit)
+- Example: $25.00 = 2500 cents, €10.50 = 1050 cents
+- Invoices are created in `draft` status and must be finalized/paid separately via Stripe
+- Use test mode keys (`sk_test_`) during development
+- See [Stripe API Documentation](https://stripe.com/docs/api) for advanced features
+
 ## Authentication & Security
 
 ### JWT Token Flow
@@ -1083,4 +1488,3 @@ This project is provided as-is for educational purposes.
 - **Issues**: Report bugs or request features via GitHub Issues
 
 ---
-

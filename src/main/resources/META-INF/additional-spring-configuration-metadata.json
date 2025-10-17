@@ -14,12 +14,7 @@
     {
       "name": "sk_stripe",
       "type": "java.lang.String",
-      "description": "A description for 'sk_stripe'"
-    },
-    {
-      "name": "baseUrl",
-      "type": "java.lang.String",
-      "description": "A description for 'baseUrl'"
+      "description": "The secret API key for Stripe integration."
     }
   ]
 }
