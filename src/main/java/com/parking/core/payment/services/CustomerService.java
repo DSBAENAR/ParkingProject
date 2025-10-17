@@ -1,8 +1,6 @@
 package com.parking.core.payment.services;
 
 import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,11 +9,9 @@ import com.parking.core.enums.Currencies;
 import com.parking.core.payment.Requests.CustomerRequest;
 import com.parking.core.payment.Requests.UserAddress;
 import com.parking.core.payment.response.CustomerResponse;
-import com.parking.core.payment.utils.CardInfo;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.CustomerCollection;
-import com.stripe.model.PaymentMethod;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerListParams;
 

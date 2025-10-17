@@ -2,7 +2,6 @@ package com.parking.core.payment.utils;
 
 import com.parking.core.enums.Currencies;
 import com.parking.core.payment.Requests.CustomerRequest;
-import com.parking.core.payment.Requests.UserAddress;
 
 /**
  * Represents a request to process a payment using a card.
