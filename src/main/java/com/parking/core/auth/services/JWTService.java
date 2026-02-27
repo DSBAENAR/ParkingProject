@@ -18,6 +18,16 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+/**
+ * Service responsible for creating and validating JSON Web Tokens (JWT).
+ * <p>
+ * Tokens are signed with HMAC-SHA256 using a Base64-URL-encoded secret key
+ * configured via the {@code secret-key} application property.  Expiration
+ * is controlled by the {@code jwt.expiration} property (milliseconds).
+ * </p>
+ *
+ * @see JWTAuthFilter
+ */
 @Service
 public class JWTService {
     private final SecretKey key;
@@ -74,6 +84,12 @@ public class JWTService {
                 .compact();
     }
 
+    /**
+     * Extracts the subject (username) from the given JWT token.
+     *
+     * @param token the JWT token
+     * @return the username stored as the token subject
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -121,6 +137,12 @@ public class JWTService {
        return exp.before(new Date());
     }
 
+    /**
+     * Returns the remaining time-to-live of the given token in milliseconds.
+     *
+     * @param token the JWT token
+     * @return remaining milliseconds until expiration (may be negative if already expired)
+     */
     public long getExpiration(String token){
         return extractClaim(token, Claims::getExpiration).getTime() - System.currentTimeMillis();
     }

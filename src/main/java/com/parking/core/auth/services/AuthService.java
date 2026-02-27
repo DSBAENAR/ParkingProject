@@ -20,6 +20,17 @@ import com.parking.core.enums.Roles;
 import com.parking.core.model.User;
 import com.parking.core.repository.UserRepository;
 
+/**
+ * Service layer for authentication operations (sign-up and login).
+ * <p>
+ * Handles user registration with BCrypt password encoding and JWT token generation,
+ * as well as login authentication using Spring Security's {@link AuthenticationManager}.
+ * </p>
+ *
+ * @see JWTService
+ * @see AuthRequest
+ * @see AuthResponse
+ */
 @Service
 public class AuthService {
 
@@ -38,6 +49,17 @@ public class AuthService {
         this.encoder = encoder;
     }
 
+    /**
+     * Registers a new user in the system.
+     * <p>
+     * Checks for duplicate username/email, encodes the password with BCrypt,
+     * assigns the {@code USER} role, and generates a JWT token.
+     * </p>
+     *
+     * @param request the registration data containing name, username, email, and password
+     * @return a map with the {@link AuthResponse} and JWT token
+     * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if the username or email already exists
+     */
     public Map<String, Object> signUp(AuthRequest request) {
         if (userRepository.findByUsernameOrEmail(request.getUsername(), request.getEmail()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The username or email is already registered");
@@ -59,6 +81,17 @@ public class AuthService {
         return response;
     }
 
+    /**
+     * Authenticates a user and generates a JWT token.
+     * <p>
+     * Accepts either username or email as the identifier. Falls back to email
+     * if username is blank or null.
+     * </p>
+     *
+     * @param request the login data containing username/email and password
+     * @return a map with the {@link AuthResponse} and JWT token
+     * @throws ResponseStatusException with {@code 401 UNAUTHORIZED} if credentials are missing, invalid, or user not found
+     */
     public Map<String, Object> login(AuthRequest request) {
         String identifier = (request.getUsername() != null && !request.getUsername().isBlank())
                 ? request.getUsername() : request.getEmail();

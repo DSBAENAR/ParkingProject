@@ -23,6 +23,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+/**
+ * REST controller for authentication endpoints (sign-up, login, logout).
+ * <p>
+ * Base path: {@code /api/v1/parking/auth} — all endpoints are publicly accessible.
+ * </p>
+ *
+ * @see AuthService
+ * @see JWTService
+ * @see BlackListToken
+ */
 @RestController
 @RequestMapping("api/v1/parking/auth")
 public class AuthHandler {
@@ -39,6 +49,12 @@ public class AuthHandler {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Registers a single new user.
+     *
+     * @param request the sign-up data (validated)
+     * @return {@code 200 OK} with the created user info, JWT token, and success message
+     */
     @PostMapping("/signUp")
     public ResponseEntity<Map<String, Object>> signUp(@Valid @RequestBody AuthRequest request) {
         Map<String, Object> response = authService.signUp(request);
@@ -46,6 +62,16 @@ public class AuthHandler {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Registers multiple users in a single request.
+     * <p>
+     * Processes each request individually; failures for one user do not block others.
+     * Each result includes either the user data or an error message.
+     * </p>
+     *
+     * @param requests a list of sign-up requests
+     * @return {@code 200 OK} with the count of processed items and individual results
+     */
     @PostMapping("/signUp/bulk")
     public ResponseEntity<Map<String, Object>> signUpBulk(@RequestBody List<AuthRequest> requests) {
         List<Map<String, Object>> responses = new ArrayList<>();
@@ -75,6 +101,12 @@ public class AuthHandler {
                 "results", responses));
     }
 
+    /**
+     * Authenticates a user and returns a JWT token.
+     *
+     * @param request the login credentials (validated)
+     * @return {@code 200 OK} with the user info, JWT token, and success message
+     */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody AuthRequest request) {
         Map<String, Object> response = authService.login(request);
@@ -82,6 +114,16 @@ public class AuthHandler {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Logs out the current user by blacklisting their JWT token.
+     * <p>
+     * Extracts the Bearer token from the Authorization header and adds it
+     * to the Redis-based blacklist with its remaining TTL.
+     * </p>
+     *
+     * @param header the Authorization header containing the Bearer token
+     * @return {@code 200 OK} with a logout success message
+     */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String header) {
         if (header != null && header.startsWith("Bearer ")) {

@@ -22,6 +22,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 
+/**
+ * Spring Security filter that intercepts every HTTP request to validate JWT tokens.
+ * <p>
+ * Requests to {@code /api/v1/parking/auth/**} are excluded. For other requests
+ * the filter extracts the Bearer token from the {@code Authorization} header,
+ * validates it via {@link JWTService}, checks the Redis-based blacklist, and
+ * sets the {@link SecurityContextHolder} authentication context when valid.
+ * </p>
+ *
+ * @see JWTService
+ * @see BlackListToken
+ */
 @Component
 public class JWTAuthFilter extends OncePerRequestFilter{
     private final JWTService jwtService;

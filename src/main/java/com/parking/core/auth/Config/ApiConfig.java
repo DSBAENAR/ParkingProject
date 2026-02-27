@@ -8,6 +8,13 @@ import com.stripe.Stripe;
 import jakarta.annotation.PostConstruct;
 
 
+/**
+ * Configuration component that initialises the Stripe API key on application startup.
+ * <p>
+ * Reads the {@code sk_stripe} property (typically from a {@code .env} file) and
+ * assigns it to {@link com.stripe.Stripe#apiKey} via a {@link PostConstruct} hook.
+ * </p>
+ */
 @Component
 public class ApiConfig {
 

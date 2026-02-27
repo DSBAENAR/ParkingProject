@@ -4,6 +4,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Request body for authentication endpoints (sign-up and login).
+ * <p>
+ * Used for both registration ({@code name}, {@code username}, {@code email}, {@code password})
+ * and login ({@code username}/{@code email} + {@code password}).
+ * </p>
+ */
 public class AuthRequest {
     private String name;
 
