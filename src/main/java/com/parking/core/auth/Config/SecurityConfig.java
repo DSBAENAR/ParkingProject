@@ -96,6 +96,7 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
+                                            .requestMatchers("/actuator/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").permitAll()
                                             .requestMatchers("/api/invoices/**").permitAll()

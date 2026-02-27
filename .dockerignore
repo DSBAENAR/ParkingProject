@@ -1,0 +1,13 @@
+target/
+!target/core-*.jar
+.git
+.gitignore
+.env
+*.md
+docs/
+reports/
+data/
+.idea/
+*.iml
+.vscode/
+.DS_Store
