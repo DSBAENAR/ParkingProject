@@ -12,6 +12,14 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * REST controller for report generation endpoints.
+ * <p>
+ * Base path: {@code /api/v1/parking/reports}
+ * </p>
+ *
+ * @see ReportService
+ */
 @RestController
 @RequestMapping("api/v1/parking/reports")
 public class ReportHandler {
@@ -21,6 +29,14 @@ public class ReportHandler {
         this.reportService = reportService;
     }
 
+    /**
+     * Generates the monthly parking report for resident vehicles.
+     * <p>
+     * The report file is saved to {@code ./reports/informe_estacionamiento.txt}.
+     * </p>
+     *
+     * @return {@code 200 OK} with a success message and the file path
+     */
     @GetMapping("/monthly")
     public ResponseEntity<Map<String, Object>> getReportMonthly() {
         File file = reportService.generateReportMonthly();

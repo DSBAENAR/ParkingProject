@@ -15,17 +15,51 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.stripe.exception.StripeException;
 
+/**
+ * Centralized exception handler for the entire application.
+ * <p>
+ * Catches exceptions thrown by controllers and services and transforms them into
+ * structured JSON error responses with consistent format:
+ * <pre>
+ * {
+ *   "timestamp": "...",
+ *   "status": 400,
+ *   "error": "Bad Request",
+ *   "message": "..."
+ * }
+ * </pre>
+ * </p>
+ *
+ * @see ResponseStatusException
+ * @see MethodArgumentNotValidException
+ * @see StripeException
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Handles {@link ResponseStatusException} thrown by services/controllers.
+     *
+     * @param ex the exception containing HTTP status and reason
+     * @return a structured error response with the appropriate status code
+     */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
         log.warn("ResponseStatusException: {} - {}", ex.getStatusCode(), ex.getReason());
         return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason());
     }
 
+    /**
+     * Handles bean validation errors from {@code @Valid} annotations.
+     * <p>
+     * Returns a map of field names to their respective validation error messages.
+     * </p>
+     *
+     * @param ex the validation exception containing field errors
+     * @return {@code 400 BAD_REQUEST} with field-level error details
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
@@ -42,6 +76,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    /**
+     * Handles Stripe payment processing errors.
+     *
+     * @param ex the Stripe exception with status code and message
+     * @return a structured error response with the Stripe error status
+     */
     @ExceptionHandler(StripeException.class)
     public ResponseEntity<Map<String, Object>> handleStripe(StripeException ex) {
         log.error("Stripe error: {}", ex.getMessage());
@@ -49,6 +89,12 @@ public class GlobalExceptionHandler {
         return buildResponse(status, ex.getMessage());
     }
 
+    /**
+     * Fallback handler for any unhandled exceptions.
+     *
+     * @param ex the unexpected exception
+     * @return {@code 500 INTERNAL_SERVER_ERROR} with a generic error message
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
         log.error("Unexpected error", ex);
