@@ -9,6 +9,15 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * JPA entity representing a vehicle in the parking system.
+ * <p>
+ * The vehicle ID typically corresponds to a license plate number.
+ * The type determines the pricing rules applied during payment calculation.
+ * </p>
+ *
+ * @see VehicleType
+ */
 @Entity
 public class Vehicle {
     @Id

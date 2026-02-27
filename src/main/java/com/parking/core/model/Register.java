@@ -11,6 +11,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * JPA entity representing a parking session register.
+ * <p>
+ * Tracks when a vehicle enters and exits the parking lot, along with
+ * the total parked time in minutes. Each register is linked to a single {@link Vehicle}.
+ * Dates are serialized using the format {@code dd-MM-YYYY HH:mm:ss}.
+ * </p>
+ *
+ * @see Vehicle
+ */
 @Entity
 public class Register {
     @Id

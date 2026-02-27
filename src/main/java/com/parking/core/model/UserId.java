@@ -3,6 +3,15 @@ package com.parking.core.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * Composite primary key class for the {@link User} entity.
+ * <p>
+ * Combines {@code username} and {@code email} to form the compound key.
+ * Implements {@link Serializable} as required by JPA for composite keys.
+ * </p>
+ *
+ * @see User
+ */
 public class UserId implements Serializable{
     private String username;
     private String email;

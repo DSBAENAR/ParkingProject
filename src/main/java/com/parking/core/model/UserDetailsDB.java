@@ -7,6 +7,15 @@ import org.springframework.stereotype.Service;
 
 import com.parking.core.repository.UserRepository;
 
+/**
+ * Spring Security {@link UserDetailsService} implementation that loads user data from the database.
+ * <p>
+ * Converts a {@link User} entity into a Spring Security {@link UserDetails} object
+ * for authentication and authorization purposes.
+ * </p>
+ *
+ * @see UserRepository
+ */
 @Service
 public class UserDetailsDB implements UserDetailsService{
 

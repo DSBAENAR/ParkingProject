@@ -15,6 +15,16 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * JPA entity representing a user of the parking system.
+ * <p>
+ * Uses a composite primary key ({@link UserId}) formed by {@code username} and {@code email}.
+ * The password field is excluded from JSON serialization via {@code @JsonIgnore}.
+ * </p>
+ *
+ * @see UserId
+ * @see Roles
+ */
 @IdClass(UserId.class)
 @Entity
 @Table(name = "users")
