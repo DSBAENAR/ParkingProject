@@ -6,10 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   ACR_NAME: parkingcoreacr
   IMAGE_NAME: parking-core
@@ -24,9 +20,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5879E8D0993B4426AD27DF41E699B33C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3670F8426C254877B716B3B315013518 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_64C7ED9B86AB4995A96C398A0F106273 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Login to Azure Container Registry
         run: az acr login --name ${{ env.ACR_NAME }}
@@ -48,9 +42,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5879E8D0993B4426AD27DF41E699B33C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3670F8426C254877B716B3B315013518 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_64C7ED9B86AB4995A96C398A0F106273 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
