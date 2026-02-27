@@ -92,17 +92,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http
-            .csrf(csfr -> csfr.disable())
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
-                                            .requestMatchers("/h2-console/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").permitAll()
                                             .requestMatchers("/api/invoices/**").permitAll()
                                             .requestMatchers("/api/cards/**").permitAll()
                                             .anyRequest().authenticated())
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authenticationProvider(authenticationProvider(passwordEncoder()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         

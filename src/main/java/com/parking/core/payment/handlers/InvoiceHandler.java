@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("api/invoices")
@@ -23,24 +24,10 @@ public class InvoiceHandler {
         this.invoiceService = invoiceService;
     }
 
-    /**
-     * Handles the creation of an invoice for a user.
-     *
-     * @param request the {@link InvoiceRequest} object containing the details needed to create the invoice.
-     * @return a {@link ResponseEntity} containing a success message and the created invoice if successful,
-     *         or an error message if an exception occurs.
-     * @throws StripeException if there is an error during the invoice creation process.
-     */
     @PostMapping("/invoice")
-    public ResponseEntity<?> addInvoice(@RequestBody InvoiceRequest request) {
-        try {
-            return ResponseEntity.ok(Map.of(
+    public ResponseEntity<Map<String, Object>> addInvoice(@Valid @RequestBody InvoiceRequest request) throws StripeException {
+        return ResponseEntity.ok(Map.of(
                 "message", "Invoice created correctly",
-                "invoice", invoiceService.createAnInvoceForAUser(request)
-            ));
-        } catch (StripeException e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+                "invoice", invoiceService.createAnInvoceForAUser(request)));
     }
-    
 }
