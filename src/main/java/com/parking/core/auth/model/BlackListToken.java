@@ -7,6 +7,14 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
+/**
+ * Redis-backed component for blacklisting revoked JWT tokens.
+ * <p>
+ * When a user logs out, their token is stored in Redis with its remaining
+ * time-to-live. Subsequent requests presenting a blacklisted token are rejected
+ * by {@link com.parking.core.auth.services.JWTAuthFilter}.
+ * </p>
+ */
 @Component
 public class BlackListToken {
     private final RedisTemplate<String,String> redisTemplate;

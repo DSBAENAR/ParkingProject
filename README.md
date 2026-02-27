@@ -1,6 +1,6 @@
 # Parking Core Service
 
-A Spring Boot RESTful API for parking lot management with JWT authentication, Redis-based token blacklisting, Stripe payment integration, and H2 database. This service handles vehicle registration, parking session tracking, payment calculation, customer management, invoice generation, and monthly reporting.
+A Spring Boot RESTful API for parking lot management with JWT authentication, Redis-based token blacklisting, Stripe payment integration, and PostgreSQL database. This service handles vehicle registration, parking session tracking, payment calculation, customer management, invoice generation, and monthly reporting.
 
 ## Table of Contents
 
@@ -32,7 +32,7 @@ A Spring Boot RESTful API for parking lot management with JWT authentication, Re
 - � **Stripe integration** for payment processing (customers, cards, invoices)
 - �📊 Monthly resident vehicle reports
 - 🔒 Token blacklisting on logout using Redis
-- 💾 H2 in-memory/file database for development
+- 💾 PostgreSQL database for production; H2 in-memory for development/testing
 - 🎯 RESTful API design with comprehensive error handling
 
 ## Tech Stack
@@ -41,7 +41,8 @@ A Spring Boot RESTful API for parking lot management with JWT authentication, Re
 - **Spring Boot 3.5.6**
 - **Spring Security** (JWT authentication)
 - **Spring Data JPA** (ORM)
-- **H2 Database** (development)
+- **PostgreSQL** (production database)
+- **H2 Database** (development / testing)
 - **Redis** (token blacklist)
 - **Stripe API** (payment processing)
 - **Maven** (build tool)
@@ -58,6 +59,11 @@ Before you begin, ensure you have the following installed:
 - **Apache Maven 3.6+**
   - Verify: `mvn -version`
   - Download: [Maven](https://maven.apache.org/download.cgi)
+
+- **PostgreSQL 14+** (production)
+  - Verify: `psql --version`
+  - Install on macOS: `brew install postgresql@16`
+  - Install with Docker: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`
 
 - **Redis Server**
   - Verify: `redis-cli ping` (should return `PONG`)
@@ -92,7 +98,7 @@ mvn clean install
 
 This will:
 
-- Download Spring Boot, H2, Redis, JWT, and other dependencies
+- Download Spring Boot, PostgreSQL, Redis, JWT, and other dependencies
 - Compile the source code
 - Run tests (use `-DskipTests` to skip)
 - Package the application as a JAR file
@@ -105,11 +111,10 @@ Configuration is stored in `src/main/resources/application.properties`. Key sett
 
 | Property | Description | Default Value |
 |----------|-------------|---------------|
-| `spring.datasource.url` | H2 database file location | `jdbc:h2:file:./data/parkingdb` |
-| `spring.datasource.username` | Database username | `sa` |
-| `spring.datasource.password` | Database password | _(empty)_ |
-| `spring.h2.console.enabled` | Enable H2 web console | `true` |
-| `spring.h2.console.path` | H2 console URL path | `/h2-console` |
+| `spring.datasource.url` | PostgreSQL JDBC URL | `jdbc:postgresql://localhost:5432/parkingdb` |
+| `spring.datasource.username` | Database username | `postgres` |
+| `spring.datasource.password` | Database password | `postgres` |
+| `spring.jpa.hibernate.ddl-auto` | Schema generation strategy | `update` |
 | `spring.data.redis.host` | Redis server hostname | `localhost` |
 | `spring.data.redis.port` | Redis server port | `6379` |
 | `secret-key` | JWT signing secret key | _(see file)_ |
@@ -126,7 +131,9 @@ For security, use environment variables instead of hardcoded values:
 # .env
 SECRET_KEY=your-secure-secret-key-here
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-SPRING_DATASOURCE_URL=jdbc:h2:file:./data/parkingdb
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/parkingdb
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
 SPRING_DATA_REDIS_HOST=localhost
 SPRING_DATA_REDIS_PORT=6379
 JWT_EXPIRATION=3600000
@@ -135,9 +142,9 @@ JWT_EXPIRATION=3600000
 2. Update `application.properties` to use environment variables:
 
 ```properties
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/parkingdb}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:sa}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/parkingdb}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:postgres}
 
 spring.data.redis.host=${SPRING_DATA_REDIS_HOST:localhost}
 spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}

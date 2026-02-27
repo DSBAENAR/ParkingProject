@@ -11,6 +11,13 @@ import com.parking.core.model.User;
 import com.parking.core.model.UserId;
 
 
+/**
+ * Spring Data JPA repository for {@link User} entities.
+ * <p>
+ * Uses the composite key {@link UserId} and provides look-up methods
+ * by name, username, email, and a combined username-or-email query.
+ * </p>
+ */
 @Repository
 public interface UserRepository extends JpaRepository<User,UserId>{
     Optional<User> findByName(String name);

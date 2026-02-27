@@ -10,6 +10,13 @@ import org.springframework.stereotype.Repository;
 import com.parking.core.enums.VehicleType;
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
+/**
+ * Spring Data JPA repository for {@link Register} entities.
+ * <p>
+ * Provides queries to find active parking sessions (where {@code exitdate} is null),
+ * look up registers by vehicle, and filter by vehicle type.
+ * </p>
+ */
 @Repository
 public interface RegisterRepository extends JpaRepository<Register,Long>{
     boolean existsByVehicleAndExitdateIsNull(Vehicle vehicle);

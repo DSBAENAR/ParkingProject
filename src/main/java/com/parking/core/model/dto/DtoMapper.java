@@ -12,10 +12,23 @@ public final class DtoMapper {
 
     private DtoMapper() {}
 
+    /**
+     * Converts a {@link Vehicle} entity to a {@link VehicleDTO}.
+     *
+     * @param vehicle the vehicle entity
+     * @return the corresponding DTO
+     */
     public static VehicleDTO toVehicleDTO(Vehicle vehicle) {
         return new VehicleDTO(vehicle.getId(), vehicle.getType());
     }
 
+    /**
+     * Converts a {@link Register} entity to a {@link RegisterDTO},
+     * including the nested {@link VehicleDTO}.
+     *
+     * @param register the register entity
+     * @return the corresponding DTO
+     */
     public static RegisterDTO toRegisterDTO(Register register) {
         return new RegisterDTO(
             register.getId(),
@@ -26,6 +39,13 @@ public final class DtoMapper {
         );
     }
 
+    /**
+     * Converts a {@link User} entity to a {@link UserDTO},
+     * excluding sensitive fields like the password.
+     *
+     * @param user the user entity
+     * @return the corresponding DTO
+     */
     public static UserDTO toUserDTO(User user) {
         return new UserDTO(
             user.getName(),
