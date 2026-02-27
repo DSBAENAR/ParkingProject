@@ -17,6 +17,22 @@ import com.parking.core.model.Vehicle;
 import com.parking.core.repository.RegisterRepository;
 import com.parking.core.repository.VehicleRepository;
 
+/**
+ * Service layer for vehicle management and parking payment calculations.
+ * <p>
+ * Manages vehicle CRUD operations and implements the pricing logic:
+ * <ul>
+ *   <li><strong>RESIDENT</strong>: 0.05 per minute</li>
+ *   <li><strong>NON_RESIDENT</strong>: 0.50 per minute</li>
+ *   <li><strong>OFICIAL</strong>: free (0.00)</li>
+ * </ul>
+ * Also handles the monthly reset cycle: clearing official registers and
+ * resetting resident minute counters.
+ * </p>
+ *
+ * @see Vehicle
+ * @see VehicleType
+ */
 @Service
 public class ParkingService {
 
@@ -30,12 +46,25 @@ public class ParkingService {
         this.registerRepository = registerRepository;
     }
 
+    /**
+     * Retrieves a vehicle by its ID.
+     *
+     * @param vehicle a vehicle object containing the ID to search for
+     * @return the found {@link Vehicle}
+     * @throws ResponseStatusException with {@code 404 NOT_FOUND} if the vehicle does not exist
+     */
     public Vehicle getVehicle(Vehicle vehicle) {
         return vehicleRepository.findById(vehicle.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Vehicle " + vehicle.getId() + " not found"));
     }
 
+    /**
+     * Retrieves all registered vehicles.
+     *
+     * @return a list of all {@link Vehicle} entities
+     * @throws ResponseStatusException with {@code 404 NOT_FOUND} if no vehicles are registered
+     */
     public List<Vehicle> getAllVehicles() {
         List<Vehicle> vehicles = vehicleRepository.findAll();
         if (vehicles.isEmpty()) {
@@ -45,6 +74,22 @@ public class ParkingService {
         return vehicles;
     }
 
+    /**
+     * Calculates the total parking fee for a vehicle based on its type and accumulated minutes.
+     * <p>
+     * Pricing rules:
+     * <ul>
+     *   <li>{@code RESIDENT}: totalMinutes × 0.05</li>
+     *   <li>{@code OFICIAL}: 0.00 (free)</li>
+     *   <li>{@code NON_RESIDENT}: totalMinutes × 0.50</li>
+     * </ul>
+     * The result is rounded to 2 decimal places using {@code HALF_UP} rounding.
+     * </p>
+     *
+     * @param vehicle the vehicle to calculate payment for
+     * @return the total fee rounded to 2 decimal places
+     * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if the vehicle has no registers
+     */
     public double calculatePayment(Vehicle vehicle) {
         List<Register> registers = registerRepository.findAllByVehicle(vehicle);
         if (registers.isEmpty()) {
@@ -65,6 +110,13 @@ public class ParkingService {
         return result;
     }
 
+    /**
+     * Saves a new vehicle in the system.
+     *
+     * @param vehicle the vehicle to save
+     * @return the saved {@link Vehicle}
+     * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if a vehicle with the same ID already exists
+     */
     public Vehicle saveVehicle(Vehicle vehicle) {
         if (vehicleRepository.findById(vehicle.getId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle already exists");
@@ -74,6 +126,18 @@ public class ParkingService {
         return saved;
     }
 
+    /**
+     * Performs the monthly reset cycle.
+     * <p>
+     * This operation:
+     * <ol>
+     *   <li>Resets all resident register minutes to zero</li>
+     *   <li>Deletes all official vehicle registers</li>
+     * </ol>
+     * </p>
+     *
+     * @return a map containing a success message and the count of deleted official registers
+     */
     public Map<String, Object> monthStarts() {
         List<Register> oficials = registerRepository.findAllByVehicle_Type(VehicleType.OFICIAL);
         List<Register> residents = registerRepository.findAllByVehicle_Type(VehicleType.RESIDENT);
@@ -92,6 +156,14 @@ public class ParkingService {
                 "deletedCount", count);
     }
 
+    /**
+     * Updates the type of an existing vehicle.
+     *
+     * @param id              the ID of the vehicle to update
+     * @param toUpdateVehicle a vehicle object containing the new type
+     * @return the updated {@link Vehicle}
+     * @throws ResponseStatusException with {@code 404 NOT_FOUND} if the vehicle does not exist
+     */
     public Vehicle updateVehicle(String id, Vehicle toUpdateVehicle) {
         Vehicle existing = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle does not exist"));

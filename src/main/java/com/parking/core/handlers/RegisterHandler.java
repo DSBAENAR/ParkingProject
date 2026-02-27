@@ -17,6 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.validation.Valid;
 
+/**
+ * REST controller for parking register operations (vehicle entry and exit).
+ * <p>
+ * Base path: {@code /api/v1/parking}
+ * </p>
+ *
+ * @see RegisterService
+ */
 @RestController
 @RequestMapping("api/v1/parking")
 public class RegisterHandler {
@@ -27,6 +35,11 @@ public class RegisterHandler {
         this.registerService = registerService;
     }
 
+    /**
+     * Retrieves all parking registers.
+     *
+     * @return {@code 200 OK} with the list of all registers
+     */
     @GetMapping("/registers")
     public ResponseEntity<Map<String, Object>> getAll() {
         return ResponseEntity.ok(Map.of("registers", registerService.getAllRegisters()));

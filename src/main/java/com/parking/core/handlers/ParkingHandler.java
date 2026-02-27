@@ -18,6 +18,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import jakarta.validation.Valid;
 
+/**
+ * REST controller for vehicle management and payment endpoints.
+ * <p>
+ * Base path: {@code /api/v1/parking/vehicles}
+ * </p>
+ *
+ * @see ParkingService
+ */
 @RestController
 @RequestMapping("api/v1/parking/vehicles")
 public class ParkingHandler {
@@ -27,11 +35,22 @@ public class ParkingHandler {
         this.parkingService = parkingService;
     }
 
+    /**
+     * Retrieves all registered vehicles.
+     *
+     * @return {@code 200 OK} with the list of vehicles
+     */
     @GetMapping("/")
     public ResponseEntity<Map<String, Object>> getAll() {
         return ResponseEntity.ok(Map.of("vehicles", parkingService.getAllVehicles()));
     }
 
+    /**
+     * Registers a new vehicle in the parking system.
+     *
+     * @param vehicle the vehicle data (validated)
+     * @return {@code 200 OK} with a success message and the saved vehicle
+     */
     @PostMapping("/")
     public ResponseEntity<Map<String, Object>> saveVehicle(@Valid @RequestBody Vehicle vehicle) {
         Vehicle saved = parkingService.saveVehicle(vehicle);
@@ -41,6 +60,12 @@ public class ParkingHandler {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Calculates the parking fee for a vehicle.
+     *
+     * @param vehicle the vehicle to calculate payment for (validated)
+     * @return {@code 200 OK} with the calculated price and vehicle info
+     */
     @PostMapping("/pay")
     public ResponseEntity<Map<String, Object>> calculatePayment(@Valid @RequestBody Vehicle vehicle) {
         double price = parkingService.calculatePayment(vehicle);
@@ -50,11 +75,23 @@ public class ParkingHandler {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Triggers the monthly reset: deletes official registers and resets resident minutes.
+     *
+     * @return {@code 200 OK} with a summary of the reset operation
+     */
     @GetMapping("/startsMonth")
     public ResponseEntity<Map<String, Object>> startsMonth() {
         return ResponseEntity.ok(parkingService.monthStarts());
     }
 
+    /**
+     * Updates the type of an existing vehicle.
+     *
+     * @param id      the plate/ID of the vehicle to update
+     * @param vehicle the vehicle object with the new type (validated)
+     * @return {@code 200 OK} with a success message and the updated vehicle
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateVehicle(@PathVariable String id, @Valid @RequestBody Vehicle vehicle) {
         Vehicle updated = parkingService.updateVehicle(id, vehicle);
