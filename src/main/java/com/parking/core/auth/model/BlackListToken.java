@@ -3,6 +3,8 @@ package com.parking.core.auth.model;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class BlackListToken {
+    private static final Logger log = LoggerFactory.getLogger(BlackListToken.class);
     private final RedisTemplate<String,String> redisTemplate;
     private final ValueOperations<String,String> valueOps;
 
@@ -38,7 +41,11 @@ public class BlackListToken {
      * @param expirationMs The expiration time in milliseconds after which the token will be removed from the blacklist.
      */
     public void add(String token, long expirationMs){
-        valueOps.set(token,"revoked", expirationMs, TimeUnit.MILLISECONDS);
+        try {
+            valueOps.set(token, "revoked", expirationMs, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.warn("Redis unavailable: token blacklisting skipped. Token will expire naturally.", e);
+        }
     }
 
     /**
@@ -48,7 +55,12 @@ public class BlackListToken {
      * @return {@code true} if the token is blacklisted, {@code false} otherwise
      */
     public boolean isBlackListed(String token){
-        return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+        } catch (Exception e) {
+            log.warn("Redis unavailable: cannot check blacklist, treating token as valid.", e);
+            return false;
+        }
     }
 }
 
