@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,7 +59,7 @@ public class ParkingHandler {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("message", "Vehicle created successfully");
         response.put("vehicle", saved);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -80,7 +82,7 @@ public class ParkingHandler {
      *
      * @return {@code 200 OK} with a summary of the reset operation
      */
-    @GetMapping("/startsMonth")
+    @PostMapping("/startsMonth")
     public ResponseEntity<Map<String, Object>> startsMonth() {
         return ResponseEntity.ok(parkingService.monthStarts());
     }
@@ -99,5 +101,11 @@ public class ParkingHandler {
         response.put("message", "Vehicle updated successfully");
         response.put("vehicle", updated);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteVehicle(@PathVariable String id) {
+        parkingService.deleteVehicle(id);
+        return ResponseEntity.ok(Map.of("message", "Vehicle deleted successfully"));
     }
 }

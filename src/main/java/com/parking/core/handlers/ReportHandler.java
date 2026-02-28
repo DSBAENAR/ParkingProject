@@ -42,7 +42,7 @@ public class ReportHandler {
         File file = reportService.generateReportMonthly();
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("message", "Report created successfully");
-        response.put("report_file", file.getPath());
+        response.put("report_file", file.getName());
         return ResponseEntity.ok(response);
     }
 }
