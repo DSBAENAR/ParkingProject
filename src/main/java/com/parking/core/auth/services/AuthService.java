@@ -78,7 +78,7 @@ public class AuthService {
         log.info("New user registered: {}", user.getUsername());
 
         Map<String, Object> response = new HashMap<>();
-        response.put("user", new AuthResponse(user.getName(), user.getEmail(), user.getUsername()));
+        response.put("user", new AuthResponse(user.getName(), user.getEmail(), user.getUsername(), user.getRole().name()));
         response.put("token", jwt.generateToken(user));
         return response;
     }
@@ -112,7 +112,7 @@ public class AuthService {
             log.info("User logged in: {}", user.getUsername());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("user", new AuthResponse(user.getName(), user.getEmail(), user.getUsername()));
+            response.put("user", new AuthResponse(user.getName(), user.getEmail(), user.getUsername(), user.getRole().name()));
             response.put("token", jwt.generateToken(user));
             return response;
 

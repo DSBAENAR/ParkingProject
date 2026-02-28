@@ -118,6 +118,7 @@ public class SecurityConfig {
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
                                             .requestMatchers("/actuator/**").permitAll()
                                             .requestMatchers("/api/webhooks/**").permitAll()
+                                            .requestMatchers("/api/v1/public/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").authenticated()
                                             .requestMatchers("/api/invoices/**").authenticated()

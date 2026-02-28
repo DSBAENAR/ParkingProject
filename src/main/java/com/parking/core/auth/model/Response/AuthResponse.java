@@ -10,5 +10,6 @@ package com.parking.core.auth.model.Response;
 public record AuthResponse(
     String name,
     String email,
-    String username
+    String username,
+    String role
 ) {}
