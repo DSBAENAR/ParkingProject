@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
+import com.parking.core.model.dto.RegisterEntryRequest;
 import com.parking.core.service.RegisterService;
 
 import java.util.LinkedHashMap;
@@ -53,8 +54,8 @@ public class RegisterHandler {
      * @return success message and the created register
      */
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> registerVehicle(@Valid @RequestBody Vehicle vehicle) {
-        Register register = registerService.registerVehicleEntrance(vehicle);
+    public ResponseEntity<Map<String, Object>> registerVehicle(@Valid @RequestBody RegisterEntryRequest request) {
+        Register register = registerService.registerVehicleEntrance(request);
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("message", "Register created successfully");
         response.put("register", register);

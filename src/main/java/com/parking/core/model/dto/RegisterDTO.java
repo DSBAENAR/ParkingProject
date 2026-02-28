@@ -16,5 +16,6 @@ public record RegisterDTO(
     VehicleDTO vehicle,
     LocalDateTime entryDate,
     LocalDateTime exitDate,
-    int minutes
+    int minutes,
+    String phoneNumber
 ) {}

@@ -35,7 +35,8 @@ public final class DtoMapper {
             toVehicleDTO(register.getVehicle()),
             register.getEntrydate(),
             register.getExitdate(),
-            register.getMinutes()
+            register.getMinutes(),
+            register.getPhoneNumber()
         );
     }
 

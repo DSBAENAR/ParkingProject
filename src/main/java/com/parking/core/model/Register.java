@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,6 +42,9 @@ public class Register {
     LocalDateTime exitdate;
 
     int minutes;
+
+    @Column(name = "phone_number")
+    String phoneNumber;
 
     public Register(){}
 
@@ -87,6 +91,12 @@ public class Register {
     public void setMinutes(int minutes) {
         this.minutes = minutes;
     }
-    
-    
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 }
