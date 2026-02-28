@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.model.Register;
@@ -65,6 +66,7 @@ public class RegisterService {
      * @throws ResponseStatusException with {@code 404 NOT_FOUND} if the vehicle is not registered
      * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if the vehicle already has an active register
      */
+    @Transactional
     public Register registerVehicleEntrance(Vehicle vehicleToRegister) {
         Vehicle vehicle = vehicleRepository.findById(vehicleToRegister.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,

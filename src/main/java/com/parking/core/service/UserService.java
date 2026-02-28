@@ -83,8 +83,9 @@ public class UserService {
      * @param pageNumber zero-based page index
      * @return a {@link PageResponse} containing the users, current page, total pages, and total count
      */
-    public PageResponse<User> getUsersPaginated(int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, 10, Sort.by("username"));
+    public PageResponse<User> getUsersPaginated(int pageNumber, int pageSize) {
+        int clampedSize = Math.max(1, Math.min(pageSize, 100));
+        Pageable pageable = PageRequest.of(pageNumber, clampedSize, Sort.by("username"));
         Page<User> page = userRepository.findAll(pageable);
         return new PageResponse<>(page.getContent(), page.getNumber(), page.getTotalPages(), page.getTotalElements());
     }

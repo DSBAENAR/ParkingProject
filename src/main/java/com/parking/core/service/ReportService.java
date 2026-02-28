@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +22,9 @@ import com.parking.core.repository.RegisterRepository;
 @Service
 public class ReportService {
     private final RegisterRepository registerRepository;
-    private final ParkingService parkingService;
 
-    public ReportService(RegisterRepository registerRepository, ParkingService parkingService){
+    public ReportService(RegisterRepository registerRepository){
         this.registerRepository = registerRepository;
-        this.parkingService = parkingService;
     }
 
     
@@ -58,9 +58,9 @@ public class ReportService {
             for (Map.Entry<Vehicle,Integer> entry : totalminutesByvehicle.entrySet()) {
                 Vehicle vehicle = entry.getKey();
                 Integer minutes = entry.getValue();
-                double payment = parkingService.calculatePayment(vehicle);
+                double payment = BigDecimal.valueOf(minutes * 0.05).setScale(2, RoundingMode.HALF_UP).doubleValue();
 
-                writer.printf("%-12s %-25d %-20.2f%n", 
+                writer.printf("%-12s %-25d %-20.2f%n",
                     vehicle.getId(), minutes, payment);
             }
 
