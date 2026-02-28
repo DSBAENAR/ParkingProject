@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
+import com.parking.core.model.dto.RegisterEntryRequest;
 import com.parking.core.repository.RegisterRepository;
 import com.parking.core.repository.VehicleRepository;
 
@@ -33,10 +34,15 @@ public class RegisterService {
 
     private final RegisterRepository registerRepository;
     private final VehicleRepository vehicleRepository;
+    private final ParkingService parkingService;
+    private final SmsNotificationService smsNotificationService;
 
-    public RegisterService(RegisterRepository registerRepository, VehicleRepository vehicleRepository) {
+    public RegisterService(RegisterRepository registerRepository, VehicleRepository vehicleRepository,
+                           ParkingService parkingService, SmsNotificationService smsNotificationService) {
         this.registerRepository = registerRepository;
         this.vehicleRepository = vehicleRepository;
+        this.parkingService = parkingService;
+        this.smsNotificationService = smsNotificationService;
     }
 
     /**
@@ -67,10 +73,10 @@ public class RegisterService {
      * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if the vehicle already has an active register
      */
     @Transactional
-    public Register registerVehicleEntrance(Vehicle vehicleToRegister) {
-        Vehicle vehicle = vehicleRepository.findById(vehicleToRegister.getId())
+    public Register registerVehicleEntrance(RegisterEntryRequest request) {
+        Vehicle vehicle = vehicleRepository.findById(request.vehicleId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Vehicle " + vehicleToRegister.getId() + " not found"));
+                        "Vehicle " + request.vehicleId() + " not found"));
 
         boolean existingRegister = registerRepository.existsByVehicleAndExitdateIsNull(vehicle);
         if (existingRegister) {
@@ -79,9 +85,15 @@ public class RegisterService {
 
         Register register = new Register(vehicle);
         register.setEntrydate(LocalDateTime.now());
+        register.setPhoneNumber(request.phoneNumber());
 
         Register saved = registerRepository.save(register);
         log.info("Vehicle {} entered parking - Register #{}", vehicle.getId(), saved.getId());
+
+        if (saved.getPhoneNumber() != null && !saved.getPhoneNumber().isBlank()) {
+            smsNotificationService.sendEntrySms(saved.getPhoneNumber(), vehicle.getId(), saved.getEntrydate());
+        }
+
         return saved;
     }
 
@@ -107,6 +119,13 @@ public class RegisterService {
 
         Register saved = registerRepository.save(existing);
         log.info("Vehicle {} left parking after {} minutes - Register #{}", vehicle.getId(), minutes, saved.getId());
+
+        if (saved.getPhoneNumber() != null && !saved.getPhoneNumber().isBlank()) {
+            double amount = parkingService.calculatePaymentForRegister(saved);
+            smsNotificationService.sendExitSms(
+                    saved.getPhoneNumber(), vehicle.getId(), minutes, amount, saved.getId());
+        }
+
         return saved;
     }
 }

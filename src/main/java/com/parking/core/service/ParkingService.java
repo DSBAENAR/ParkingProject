@@ -118,6 +118,16 @@ public class ParkingService {
      * @return the saved {@link Vehicle}
      * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if a vehicle with the same ID already exists
      */
+    public double calculatePaymentForRegister(Register register) {
+        int minutes = register.getMinutes();
+        double price = switch (register.getVehicle().getType()) {
+            case RESIDENT -> minutes * 0.05;
+            case OFICIAL -> 0;
+            default -> minutes * 0.5;
+        };
+        return BigDecimal.valueOf(price).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    }
+
     public Vehicle saveVehicle(Vehicle vehicle) {
         if (vehicleRepository.findById(vehicle.getId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle already exists");
