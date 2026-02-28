@@ -135,7 +135,7 @@ class UserServiceTest {
             Page<User> page = new PageImpl<>(List.of(testUser), pageable, 1);
             when(userRepository.findAll(pageable)).thenReturn(page);
 
-            PageResponse<User> response = userService.getUsersPaginated(0);
+            PageResponse<User> response = userService.getUsersPaginated(0, 10);
 
             assertEquals(1, response.content().size());
             assertEquals(0, response.currentPage());
@@ -150,7 +150,7 @@ class UserServiceTest {
             Page<User> page = new PageImpl<>(Collections.emptyList(), pageable, 0);
             when(userRepository.findAll(pageable)).thenReturn(page);
 
-            PageResponse<User> response = userService.getUsersPaginated(0);
+            PageResponse<User> response = userService.getUsersPaginated(0, 10);
 
             assertTrue(response.content().isEmpty());
             assertEquals(0, response.total());

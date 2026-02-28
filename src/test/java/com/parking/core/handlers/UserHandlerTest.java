@@ -78,7 +78,7 @@ class UserHandlerTest {
     void shouldReturnPaginatedUsers() throws Exception {
         User user = new User("John", "johndoe", Roles.USER, "john@example.com", null);
         PageResponse<User> pageResponse = new PageResponse<>(List.of(user), 0, 1, 1);
-        when(userService.getUsersPaginated(0)).thenReturn(pageResponse);
+        when(userService.getUsersPaginated(0, 10)).thenReturn(pageResponse);
 
         mockMvc.perform(get("/api/v1/parking/users/pages")
                         .param("pageNumber", "0"))

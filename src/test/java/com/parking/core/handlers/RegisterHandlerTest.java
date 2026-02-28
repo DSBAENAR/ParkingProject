@@ -66,7 +66,7 @@ class RegisterHandlerTest {
                         .content("""
                                 {"id": "ABC123", "type": "NON_RESIDENT"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Register created successfully"))
                 .andExpect(jsonPath("$.register").exists());
     }

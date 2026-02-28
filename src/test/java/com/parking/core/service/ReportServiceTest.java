@@ -1,7 +1,6 @@
 package com.parking.core.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -29,9 +28,6 @@ class ReportServiceTest {
     @Mock
     private RegisterRepository registerRepository;
 
-    @Mock
-    private ParkingService parkingService;
-
     @InjectMocks
     private ReportService reportService;
 
@@ -51,7 +47,6 @@ class ReportServiceTest {
         r.setMinutes(120);
 
         when(registerRepository.findAllByVehicle_Type(VehicleType.RESIDENT)).thenReturn(List.of(r));
-        when(parkingService.calculatePayment(any(Vehicle.class))).thenReturn(6.0);
 
         File result = reportService.generateReportMonthly();
 
@@ -84,7 +79,6 @@ class ReportServiceTest {
         r2.setMinutes(90);
 
         when(registerRepository.findAllByVehicle_Type(VehicleType.RESIDENT)).thenReturn(List.of(r1, r2));
-        when(parkingService.calculatePayment(resident)).thenReturn(7.5);
 
         File result = reportService.generateReportMonthly();
 

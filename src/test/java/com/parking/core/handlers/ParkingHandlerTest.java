@@ -62,7 +62,7 @@ class ParkingHandlerTest {
                         .content("""
                                 {"id": "ABC123", "type": "NON_RESIDENT"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Vehicle created successfully"))
                 .andExpect(jsonPath("$.vehicle.id").value("ABC123"));
     }
@@ -109,13 +109,13 @@ class ParkingHandlerTest {
     }
 
     @Test
-    @DisplayName("GET /startsMonth - should reset month")
+    @DisplayName("POST /startsMonth - should reset month")
     void shouldResetMonth() throws Exception {
         when(parkingService.monthStarts()).thenReturn(Map.of(
                 "message", "Deleted all official registers",
                 "deletedCount", 5));
 
-        mockMvc.perform(get("/api/v1/parking/vehicles/startsMonth"))
+        mockMvc.perform(post("/api/v1/parking/vehicles/startsMonth"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.deletedCount").value(5));
     }
