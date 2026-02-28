@@ -1,5 +1,7 @@
 package com.parking.core.auth.Config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.parking.core.auth.services.JWTAuthFilter;
 import com.parking.core.model.UserDetailsDB;
@@ -24,6 +29,20 @@ public class SecurityConfig {
     public SecurityConfig(JWTAuthFilter jwtAuthFilter,UserDetailsDB userDetailsDB) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsDB = userDetailsDB;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     /**
@@ -92,19 +111,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
                                             .requestMatchers("/actuator/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
-                                            .requestMatchers("/api/customers/**").permitAll()
-                                            .requestMatchers("/api/invoices/**").permitAll()
-                                            .requestMatchers("/api/cards/**").permitAll()
+                                            .requestMatchers("/api/customers/**").authenticated()
+                                            .requestMatchers("/api/invoices/**").authenticated()
+                                            .requestMatchers("/api/cards/**").authenticated()
                                             .anyRequest().authenticated())
             .authenticationProvider(authenticationProvider(passwordEncoder()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
     

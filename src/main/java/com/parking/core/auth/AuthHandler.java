@@ -59,7 +59,7 @@ public class AuthHandler {
     public ResponseEntity<Map<String, Object>> signUp(@Valid @RequestBody AuthRequest request) {
         Map<String, Object> response = authService.signUp(request);
         response.put("message", "User created successfully");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(response);
     }
 
     /**

@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.auth.model.AuthRequest;
@@ -60,6 +61,7 @@ public class AuthService {
      * @return a map with the {@link AuthResponse} and JWT token
      * @throws ResponseStatusException with {@code 400 BAD_REQUEST} if the username or email already exists
      */
+    @Transactional
     public Map<String, Object> signUp(AuthRequest request) {
         if (userRepository.findByUsernameOrEmail(request.getUsername(), request.getEmail()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The username or email is already registered");

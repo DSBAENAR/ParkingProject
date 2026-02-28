@@ -35,11 +35,11 @@ public class JWTService {
 
     public JWTService(
         @Value("${secret-key}")
-        String secretBaese64,
+        String secretBase64,
         @Value("${jwt.expiration}")
         long expirationMs
     ){
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretBaese64));
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretBase64));
         this.expirationMs = expirationMs;
     }
 
