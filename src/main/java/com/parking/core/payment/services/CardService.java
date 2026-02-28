@@ -21,7 +21,6 @@ public class CardService {
                 .setNumber(request.number())
                 .setExpMonth(request.expMonth())
                 .setExpYear(request.expYear())
-                .setNumber(request.number())
                 .setCvc(request.cvc())
                 .build()
             )

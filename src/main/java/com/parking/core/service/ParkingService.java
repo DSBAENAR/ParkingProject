@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.parking.core.enums.VehicleType;
@@ -138,6 +139,7 @@ public class ParkingService {
      *
      * @return a map containing a success message and the count of deleted official registers
      */
+    @Transactional
     public Map<String, Object> monthStarts() {
         List<Register> oficials = registerRepository.findAllByVehicle_Type(VehicleType.OFICIAL);
         List<Register> residents = registerRepository.findAllByVehicle_Type(VehicleType.RESIDENT);
@@ -172,5 +174,18 @@ public class ParkingService {
         Vehicle updated = vehicleRepository.save(existing);
         log.info("Updated vehicle {}: type={}", id, updated.getType());
         return updated;
+    }
+
+    public void deleteVehicle(String id) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle " + id + " not found"));
+
+        boolean hasActiveRegister = registerRepository.existsByVehicleAndExitdateIsNull(vehicle);
+        if (hasActiveRegister) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete vehicle with active registers");
+        }
+
+        vehicleRepository.delete(vehicle);
+        log.info("Deleted vehicle: {}", id);
     }
 }

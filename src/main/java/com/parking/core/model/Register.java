@@ -8,8 +8,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 /**
  * JPA entity representing a parking session register.
@@ -22,6 +24,7 @@ import jakarta.persistence.ManyToOne;
  * @see Vehicle
  */
 @Entity
+@Table(name = "register", indexes = @Index(name = "idx_vehicle_exitdate", columnList = "vehicle_id, exitdate"))
 public class Register {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

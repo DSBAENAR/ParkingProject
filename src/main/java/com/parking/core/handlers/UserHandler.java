@@ -63,8 +63,10 @@ public class UserHandler {
      * @return {@code 200 OK} with paginated user data
      */
     @GetMapping("/pages")
-    public ResponseEntity<PageResponse<User>> getPaginated(@RequestParam int pageNumber) {
-        return ResponseEntity.ok(userService.getUsersPaginated(pageNumber));
+    public ResponseEntity<PageResponse<User>> getPaginated(
+            @RequestParam int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(userService.getUsersPaginated(pageNumber, pageSize));
     }
     
     

@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * JPA entity representing a vehicle in the parking system.
@@ -22,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
 public class Vehicle {
     @Id
     @NotBlank(message = "Vehicle ID is required")
+    @Pattern(regexp = "^[A-Z0-9\\-]{2,10}$", message = "Vehicle ID must be 2-10 alphanumeric characters or hyphens")
     String id;
 
     @Enumerated(EnumType.STRING)
