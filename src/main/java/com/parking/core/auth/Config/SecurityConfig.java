@@ -117,10 +117,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                                             .requestMatchers("/api/v1/parking/auth/**").permitAll()
                                             .requestMatchers("/actuator/**").permitAll()
+                                            .requestMatchers("/api/webhooks/**").permitAll()
                                             .requestMatchers("/api/v1/parking/users/**").hasRole("USER")
                                             .requestMatchers("/api/customers/**").authenticated()
                                             .requestMatchers("/api/invoices/**").authenticated()
                                             .requestMatchers("/api/cards/**").authenticated()
+                                            .requestMatchers("/api/payments/**").authenticated()
                                             .anyRequest().authenticated())
             .authenticationProvider(authenticationProvider(passwordEncoder()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
