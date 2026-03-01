@@ -23,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.parking.core.enums.VehicleType;
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
+import com.parking.core.model.dto.RegisterEntryRequest;
 import com.parking.core.repository.RegisterRepository;
 import com.parking.core.repository.VehicleRepository;
 
@@ -35,14 +36,22 @@ class RegisterServiceTest {
     @Mock
     private VehicleRepository vehicleRepository;
 
+    @Mock
+    private ParkingService parkingService;
+
+    @Mock
+    private SmsNotificationService smsNotificationService;
+
     @InjectMocks
     private RegisterService registerService;
 
     private Vehicle testVehicle;
+    private RegisterEntryRequest testRequest;
 
     @BeforeEach
     void setUp() {
         testVehicle = new Vehicle("ABC123", VehicleType.NON_RESIDENT);
+        testRequest = new RegisterEntryRequest("ABC123", VehicleType.NON_RESIDENT, null);
     }
 
     @Nested
@@ -89,7 +98,7 @@ class RegisterServiceTest {
                 return r;
             });
 
-            Register result = registerService.registerVehicleEntrance(testVehicle);
+            Register result = registerService.registerVehicleEntrance(testRequest);
 
             assertNotNull(result);
             assertEquals(testVehicle, result.getVehicle());
@@ -100,11 +109,11 @@ class RegisterServiceTest {
         @Test
         @DisplayName("should throw 404 when vehicle not found")
         void shouldThrow404WhenVehicleNotFound() {
-            Vehicle unknown = new Vehicle("UNKNOWN", VehicleType.OFICIAL);
+            RegisterEntryRequest unknownReq = new RegisterEntryRequest("UNKNOWN", VehicleType.OFICIAL, null);
             when(vehicleRepository.findById("UNKNOWN")).thenReturn(Optional.empty());
 
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> registerService.registerVehicleEntrance(unknown));
+                    () -> registerService.registerVehicleEntrance(unknownReq));
 
             assertEquals(404, ex.getStatusCode().value());
             assertTrue(ex.getReason().contains("UNKNOWN"));
@@ -117,7 +126,7 @@ class RegisterServiceTest {
             when(registerRepository.existsByVehicleAndExitdateIsNull(testVehicle)).thenReturn(true);
 
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> registerService.registerVehicleEntrance(testVehicle));
+                    () -> registerService.registerVehicleEntrance(testRequest));
 
             assertEquals(400, ex.getStatusCode().value());
             verify(registerRepository, never()).save(any());
@@ -132,7 +141,7 @@ class RegisterServiceTest {
 
             ArgumentCaptor<Register> captor = ArgumentCaptor.forClass(Register.class);
 
-            registerService.registerVehicleEntrance(testVehicle);
+            registerService.registerVehicleEntrance(testRequest);
 
             verify(registerRepository).save(captor.capture());
             assertNotNull(captor.getValue().getEntrydate());

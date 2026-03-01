@@ -23,6 +23,7 @@ import com.parking.core.auth.services.JWTAuthFilter;
 import com.parking.core.enums.VehicleType;
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
+import com.parking.core.model.dto.RegisterEntryRequest;
 import com.parking.core.service.RegisterService;
 
 @WebMvcTest(RegisterHandler.class)
@@ -59,12 +60,12 @@ class RegisterHandlerTest {
         Register r = new Register(v);
         r.setId(1L);
         r.setEntrydate(LocalDateTime.now());
-        when(registerService.registerVehicleEntrance(any(Vehicle.class))).thenReturn(r);
+        when(registerService.registerVehicleEntrance(any(RegisterEntryRequest.class))).thenReturn(r);
 
         mockMvc.perform(post("/api/v1/parking/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"id": "ABC123", "type": "NON_RESIDENT"}
+                                {"vehicleId": "ABC123", "vehicleType": "NON_RESIDENT"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Register created successfully"))
@@ -72,15 +73,15 @@ class RegisterHandlerTest {
     }
 
     @Test
-    @DisplayName("POST /register - should return 400 for validation errors (blank id)")
+    @DisplayName("POST /register - should return 400 for validation errors (blank vehicleId)")
     void shouldReturn400ForBlankId() throws Exception {
         mockMvc.perform(post("/api/v1/parking/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"id": "", "type": "NON_RESIDENT"}
+                                {"vehicleId": "", "vehicleType": "NON_RESIDENT"}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.id").exists());
+                .andExpect(jsonPath("$.fieldErrors.vehicleId").exists());
     }
 
     @Test
