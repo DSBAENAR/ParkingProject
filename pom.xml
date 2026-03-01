@@ -136,6 +136,13 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.13</version>
+				<configuration>
+					<excludes>
+						<exclude>**/auth/Config/**</exclude>
+						<exclude>**/config/AwsSnsConfig*</exclude>
+						<exclude>**/CoreApplication*</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals><goal>prepare-agent</goal></goals>

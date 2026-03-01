@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 
@@ -17,6 +18,7 @@ public class SmsNotificationService {
     private static final Logger log = LoggerFactory.getLogger(SmsNotificationService.class);
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
+    @Nullable
     private final SnsClient snsClient;
 
     @Value("${parking.name}")
@@ -25,7 +27,7 @@ public class SmsNotificationService {
     @Value("${parking.frontend-url}")
     private String frontendUrl;
 
-    public SmsNotificationService(SnsClient snsClient) {
+    public SmsNotificationService(@Nullable SnsClient snsClient) {
         this.snsClient = snsClient;
     }
 
@@ -45,6 +47,10 @@ public class SmsNotificationService {
     }
 
     private void send(String phoneNumber, String message) {
+        if (snsClient == null) {
+            log.warn("SMS not sent (AWS SNS not configured): {}", phoneNumber);
+            return;
+        }
         try {
             snsClient.publish(PublishRequest.builder()
                     .phoneNumber(phoneNumber)

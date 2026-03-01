@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analysis Report — ParkingProject</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  :root {
+    --bg: #0a0e1a; --surface: #111827; --surface2: #1e293b; --border: #334155;
+    --text: #e2e8f0; --text2: #94a3b8; --accent: #3b82f6; --green: #22c55e;
+    --yellow: #eab308; --red: #ef4444; --cyan: #06b6d4; --purple: #a855f7;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .container { max-width:1280px; margin:0 auto; padding:2rem; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    border-bottom: 1px solid var(--border); padding: 3rem 0; position: relative; overflow: hidden;
+  }
+  .header::before {
+    content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background: radial-gradient(circle at 30% 50%, rgba(59,130,246,.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(168,85,247,.06) 0%, transparent 50%);
+  }
+  .header .container { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:2rem; position:relative; }
+  .header h1 { font-size:2rem; font-weight:800; letter-spacing:-0.02em; }
+  .header h1 .accent { background:linear-gradient(135deg,var(--accent),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { color:var(--text2); font-size:0.9rem; margin-top:0.3rem; }
+
+  /* Score */
+  .score-container { text-align:center; }
+  .score-ring { width:120px; height:120px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .score-ring svg { position:absolute; transform:rotate(-90deg); }
+  .score-value { font-size:2.4rem; font-weight:800; }
+  .score-label { font-size:0.75rem; color:var(--text2); margin-top:4px; }
+
+  /* Cards */
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1rem; margin:2rem 0; }
+  .card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:1.5rem; text-align:center; position:relative; overflow:hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .card:hover { transform:translateY(-3px); border-color:var(--accent); }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .card.blue::before { background:linear-gradient(90deg,var(--accent),var(--cyan)); }
+  .card.green::before { background:linear-gradient(90deg,var(--green),#10b981); }
+  .card.yellow::before { background:linear-gradient(90deg,var(--yellow),var(--yellow)); }
+  .card.red::before { background:linear-gradient(90deg,var(--red),#f97316); }
+  .card.purple::before { background:linear-gradient(90deg,var(--purple),#ec4899); }
+  .card.cyan::before { background:linear-gradient(90deg,var(--cyan),var(--accent)); }
+  .card .num { font-size:2.2rem; font-weight:800; margin:0.25rem 0; }
+  .card .lbl { font-size:0.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; font-weight:600; }
+
+  /* Section */
+  section { margin:3rem 0; }
+  .section-title {
+    font-size:1.2rem; font-weight:700; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;
+  }
+  .section-title .icon { font-size:1.3rem; }
+  .section-title .line { flex:1; height:1px; background:var(--border); }
+
+  /* Tables */
+  .table-wrap { overflow-x:auto; border-radius:16px; border:1px solid var(--border); background:var(--surface); }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    background:var(--surface2); padding:0.75rem 1rem; text-align:left;
+    font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text2); font-weight:600;
+  }
+  td { padding:0.55rem 1rem; border-top:1px solid var(--border); font-size:0.85rem; }
+  tr:hover td { background:rgba(59,130,246,.03); }
+  .center { text-align:center; }
+  .mono { font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--cyan); }
+
+  /* Bars */
+  .bar-bg { width:100%; max-width:160px; height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width .5s ease; min-width:2px; }
+
+  /* Coverage bar big */
+  .cov-bar-bg { width:100%; height:28px; background:var(--surface2); border-radius:14px; overflow:hidden; margin:0.75rem 0; }
+  .cov-bar { height:100%; border-radius:14px; display:flex; align-items:center; justify-content:flex-end; padding-right:12px;
+    font-size:0.75rem; font-weight:700; transition:width .6s ease; }
+
+  /* Untested list */
+  .untested { list-style:none; columns:2; gap:1.5rem; margin-top:0.75rem; }
+  .untested li { padding:0.25rem 0; font-size:0.8rem; break-inside:avoid; }
+  .untested li::before { content:"\2717 "; color:var(--red); font-weight:700; margin-right:4px; }
+
+  /* Footer */
+  footer {
+    text-align:center; padding:2.5rem 0; color:var(--text2); font-size:0.78rem;
+    border-top:1px solid var(--border); margin-top:3rem;
+  }
+  footer a { color:var(--accent); text-decoration:none; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .card { animation: fadeIn .4s ease both; }
+  .card:nth-child(2) { animation-delay:.05s; }
+  .card:nth-child(3) { animation-delay:.1s; }
+  .card:nth-child(4) { animation-delay:.15s; }
+  .card:nth-child(5) { animation-delay:.2s; }
+  .card:nth-child(6) { animation-delay:.25s; }
+
+  @media (max-width:768px) {
+    .cards { grid-template-columns:repeat(2,1fr); }
+    .untested { columns:1; }
+    .header .container { flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <div>
+      <h1><span class="accent">ParkingProject</span> Analysis</h1>
+      <div class="subtitle">JaCoCo Coverage + Static Analysis &middot; February 28, 2026 — 23:51</div>
+      <div class="subtitle">Java 17 &middot; Spring Boot 3.5.6 &middot; 62 tests passed</div>
+    </div>
+    <div class="score-container">
+      <div class="score-ring">
+        <svg width="120" height="120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface2)" stroke-width="8"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#22c55e" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="0.0"/>
+        </svg>
+        <div class="score-value" style="color:#22c55e">100</div>
+      </div>
+      <div class="score-label">Health Score</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Summary cards -->
+  <div class="cards">
+    <div class="card blue">
+      <div class="lbl">Line Coverage</div>
+      <div class="num" style="color:#22c55e">95.2%</div>
+    </div>
+    <div class="card purple">
+      <div class="lbl">Branch Coverage</div>
+      <div class="num" style="color:#eab308">74.5%</div>
+    </div>
+    <div class="card cyan">
+      <div class="lbl">Method Coverage</div>
+      <div class="num" style="color:#22c55e">95.5%</div>
+    </div>
+    <div class="card red">
+      <div class="lbl">Critical Issues</div>
+      <div class="num" style="color:var(--green)">0</div>
+    </div>
+    <div class="card yellow">
+      <div class="lbl">Warnings</div>
+      <div class="num" style="color:var(--yellow)">1</div>
+    </div>
+    <div class="card green">
+      <div class="lbl">Test File Coverage</div>
+      <div class="num" style="color:#ef4444">38%</div>
+    </div>
+  </div>
+
+  <!-- Coverage by Package -->
+  <section>
+    <div class="section-title"><span class="icon">&#128230;</span> Coverage by Package <span class="line"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Package</th><th>Lines</th><th>Branches</th><th>Methods</th><th>Coverage</th></tr></thead>
+        <tbody>
+        <tr>
+          <td class="mono">repository</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment.response</td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:75.0%;background:#eab308"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">service</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">88.1%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">71.1%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">91.4%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:88.1%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">model</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">93.6%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">37.5%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">96.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:93.6%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">handlers</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">95.2%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">93.3%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:95.2%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">auth.services</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">98.1%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">80.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:98.1%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">model.dto</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment.Requests</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">auth</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">83.3%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment.utils</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment.handlers</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">87.5%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">auth.model</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">enums</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">model.Response</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">auth.model.Response</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono">payment.services</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Coverage by Class -->
+  <section>
+    <div class="section-title"><span class="icon">&#128196;</span> Coverage by Class <span class="line"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Package</th><th>Class</th><th>Lines</th><th>Branches</th><th>Covered/Total</th><th>Coverage</th></tr></thead>
+        <tbody>
+        <tr>
+          <td class="mono" style="color:#94a3b8">repository</td>
+          <td class="mono">UserRepository</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/0</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">repository</td>
+          <td class="mono">PaymentRepository</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/0</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">repository</td>
+          <td class="mono">RegisterRepository</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/0</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">repository</td>
+          <td class="mono">VehicleRepository</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/0</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment</td>
+          <td class="mono">UserPaymentMethod</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.response</td>
+          <td class="mono">BalanceResponse</td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">0/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:2%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">UserId</td>
+          <td class="center"><span style="color:#eab308;font-weight:700">57.1%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">37.5%</span></td>
+          <td class="center" style="color:#94a3b8">4/7</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:57.1%;background:#eab308"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">service</td>
+          <td class="mono">ParkingService</td>
+          <td class="center"><span style="color:#eab308;font-weight:700">77.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">68.8%</span></td>
+          <td class="center" style="color:#94a3b8">47/61</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:77.0%;background:#eab308"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">Register</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">86.4%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">19/22</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:86.4%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">GlobalExceptionHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">88.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">22/25</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:88.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">service</td>
+          <td class="mono">RegisterService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">89.5%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">50.0%</span></td>
+          <td class="center" style="color:#94a3b8">34/38</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:89.5%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">ParkingHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">90.9%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">20/22</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:90.9%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">service</td>
+          <td class="mono">ReportService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">92.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center" style="color:#94a3b8">23/25</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:92.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">User</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">92.3%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">24/26</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:92.3%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.services</td>
+          <td class="mono">AuthService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">94.7%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">90.0%</span></td>
+          <td class="center" style="color:#94a3b8">36/38</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:94.7%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.dto</td>
+          <td class="mono">DtoMapper</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">13/13</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.dto</td>
+          <td class="mono">RegisterDTO</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.dto</td>
+          <td class="mono">UserDTO</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.dto</td>
+          <td class="mono">VehicleDTO</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.dto</td>
+          <td class="mono">RegisterEntryRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">UserAddress</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">UserTax</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">InvoiceRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">PaymentRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">ProductInfo</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.Requests</td>
+          <td class="mono">CustomerRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth</td>
+          <td class="mono">AuthHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">83.3%</span></td>
+          <td class="center" style="color:#94a3b8">38/38</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">service</td>
+          <td class="mono">SmsNotificationService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center" style="color:#94a3b8">26/26</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">service</td>
+          <td class="mono">UserService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center" style="color:#94a3b8">18/18</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.utils</td>
+          <td class="mono">CardRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.utils</td>
+          <td class="mono">CardInfo</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.handlers</td>
+          <td class="mono">PaymentHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">4/4</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.handlers</td>
+          <td class="mono">InvoiceHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">5/5</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.handlers</td>
+          <td class="mono">WebhookHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">87.5%</span></td>
+          <td class="center" style="color:#94a3b8">17/17</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.handlers</td>
+          <td class="mono">CardHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">4/4</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.handlers</td>
+          <td class="mono">CustomerHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">5/5</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.services</td>
+          <td class="mono">JWTService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center" style="color:#94a3b8">35/35</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.services</td>
+          <td class="mono">JWTAuthFilter</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center" style="color:#94a3b8">33/33</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.model</td>
+          <td class="mono">BlackListToken</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">14/14</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.model</td>
+          <td class="mono">AuthRequest</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">13/13</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">enums</td>
+          <td class="mono">Roles</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">3/3</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">enums</td>
+          <td class="mono">PaymentStatus</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">4/4</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">enums</td>
+          <td class="mono">Currencies</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">4/4</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">enums</td>
+          <td class="mono">VehicleType</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">4/4</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model.Response</td>
+          <td class="mono">PageResponse</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">auth.model.Response</td>
+          <td class="mono">AuthResponse</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">Product</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">14/14</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">Payment</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">24/24</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">UserDetailsDB</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">10/10</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">Vehicle</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">11/11</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">model</td>
+          <td class="mono">UserInvoice</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">11/11</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.services</td>
+          <td class="mono">CardService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">24/24</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.services</td>
+          <td class="mono">InvoiceService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">36/36</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.services</td>
+          <td class="mono">PaymentService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center" style="color:#94a3b8">29/29</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.services</td>
+          <td class="mono">CustomerService</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#eab308;font-weight:700">75.0%</span></td>
+          <td class="center" style="color:#94a3b8">35/35</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">PublicPaymentHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center" style="color:#94a3b8">29/29</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">UserHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">6/6</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">ReportHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">8/8</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">handlers</td>
+          <td class="mono">RegisterHandler</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">14/14</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.response</td>
+          <td class="mono">CustomerResponse</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.response</td>
+          <td class="mono">InvoiceResponse</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:#94a3b8">payment.response</td>
+          <td class="mono">CardResponse</td>
+          <td class="center"><span style="color:#22c55e;font-weight:700">100.0%</span></td>
+          <td class="center"><span style="color:#ef4444;font-weight:700">0%</span></td>
+          <td class="center" style="color:#94a3b8">1/1</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:100.0%;background:#22c55e"></div></div></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Static Analysis Issues -->
+  <section>
+    <div class="section-title"><span class="icon">&#128270;</span> Static Analysis Issues (1) <span class="line"></span></div>
+    <div class='table-wrap'><table><thead><tr><th style='width:100px'>Severity</th><th style='width:280px'>File</th><th>Description</th></tr></thead><tbody>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:600;color:#eab308;background:rgba(234,179,8,.1);border:1px solid #eab30833">WARNING</span></td>
+          <td class="mono">com/parking/core/model/Payment.java</td>
+          <td>Class has 20 methods (recommended < 15)</td>
+        </tr></tbody></table></div>
+  </section>
+
+  <!-- Untested Files -->
+  <section>
+    <div class="section-title"><span class="icon">&#128203;</span> Files Without Dedicated Tests (40) <span class="line"></span></div>
+    <div class="cov-bar-bg">
+      <div class="cov-bar" style="width:38%;background:linear-gradient(90deg,var(--green),var(--cyan))">38%</div>
+    </div>
+    <p style="color:var(--text2);font-size:0.8rem;margin-bottom:0.75rem">25 of 66 source files have a matching *Test.java file</p>
+    <ul class="untested"><li class="mono">ApiConfig</li>
+<li class="mono">AuthRequest</li>
+<li class="mono">AuthResponse</li>
+<li class="mono">AwsSnsConfig</li>
+<li class="mono">BalanceResponse</li>
+<li class="mono">CardInfo</li>
+<li class="mono">CardRequest</li>
+<li class="mono">CardResponse</li>
+<li class="mono">Currencies</li>
+<li class="mono">CustomerRequest</li>
+<li class="mono">CustomerResponse</li>
+<li class="mono">GlobalExceptionHandler</li>
+<li class="mono">InvoiceRequest</li>
+<li class="mono">InvoiceResponse</li>
+<li class="mono">PageResponse</li>
+<li class="mono">Payment</li>
+<li class="mono">PaymentRepository</li>
+<li class="mono">PaymentRequest</li>
+<li class="mono">PaymentStatus</li>
+<li class="mono">Product</li>
+<li class="mono">ProductInfo</li>
+<li class="mono">Register</li>
+<li class="mono">RegisterDTO</li>
+<li class="mono">RegisterEntryRequest</li>
+<li class="mono">RegisterRepository</li>
+<li class="mono">Roles</li>
+<li class="mono">SecurityConfig</li>
+<li class="mono">User</li>
+<li class="mono">UserAddress</li>
+<li class="mono">UserDTO</li></ul>
+  </section>
+
+</div>
+
+<footer>
+  Generated with <strong>JaCoCo 0.8.13</strong> + Python static analysis &middot;
+  ParkingProject &middot; <a href="https://sonarcloud.io/project/overview?id=DSBAENAR_ParkingProject">View on SonarCloud</a>
+</footer>
+
+</body>
+</html>

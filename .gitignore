@@ -34,3 +34,5 @@ build/
 docs/apidocs/*
 
 .env
+
+generate-report.py
