@@ -24,6 +24,7 @@ import com.parking.core.enums.VehicleType;
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
 import com.parking.core.model.dto.RegisterEntryRequest;
+import com.parking.core.payment.services.StripePaymentLinkService;
 import com.parking.core.repository.RegisterRepository;
 import com.parking.core.repository.VehicleRepository;
 
@@ -42,6 +43,9 @@ class RegisterServiceTest {
     @Mock
     private SmsNotificationService smsNotificationService;
 
+    @Mock
+    private StripePaymentLinkService stripePaymentLinkService;
+
     @InjectMocks
     private RegisterService registerService;
 
@@ -51,7 +55,7 @@ class RegisterServiceTest {
     @BeforeEach
     void setUp() {
         testVehicle = new Vehicle("ABC123", VehicleType.NON_RESIDENT);
-        testRequest = new RegisterEntryRequest("ABC123", VehicleType.NON_RESIDENT, null);
+        testRequest = new RegisterEntryRequest("ABC123", VehicleType.NON_RESIDENT, null, null);
     }
 
     @Nested
@@ -109,7 +113,7 @@ class RegisterServiceTest {
         @Test
         @DisplayName("should throw 404 when vehicle not found")
         void shouldThrow404WhenVehicleNotFound() {
-            RegisterEntryRequest unknownReq = new RegisterEntryRequest("UNKNOWN", VehicleType.OFICIAL, null);
+            RegisterEntryRequest unknownReq = new RegisterEntryRequest("UNKNOWN", VehicleType.OFICIAL, null, null);
             when(vehicleRepository.findById("UNKNOWN")).thenReturn(Optional.empty());
 
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,

@@ -28,4 +28,6 @@ public interface RegisterRepository extends JpaRepository<Register,Long>{
     List<Register> findAllByVehicle_Type(VehicleType type);
 
     List<Register> findAllByVehicle(Vehicle vehicle);
+
+    Optional<Register> findTopByVehicleOrderByExitdateDesc(Vehicle vehicle);
 }

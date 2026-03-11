@@ -1,38 +1,37 @@
 package com.parking.core.service;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.rest.api.v2010.account.MessageCreator;
+import com.twilio.type.PhoneNumber;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sns.model.PublishRequest;
-import software.amazon.awssdk.services.sns.model.PublishResponse;
+import com.parking.core.config.TwilioConfig.TwilioInitializer;
 
 @ExtendWith(MockitoExtension.class)
 class SmsNotificationServiceTest {
-
-    @Mock
-    private SnsClient snsClient;
 
     private SmsNotificationService service;
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new SmsNotificationService(snsClient);
+        service = new SmsNotificationService(new TwilioInitializer());
         setField(service, "parkingName", "Test Parking");
-        setField(service, "frontendUrl", "http://localhost:3000");
+        setField(service, "twilioPhoneNumber", "+10000000000");
+        setField(service, "twilioWhatsappNumber", "+10000000001");
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {
@@ -42,59 +41,100 @@ class SmsNotificationServiceTest {
     }
 
     @Test
-    @DisplayName("null client - SMS not sent")
-    void nullClient_smsNotSent() throws Exception {
+    @DisplayName("null initializer - SMS not sent")
+    void nullInitializer_smsNotSent() throws Exception {
         SmsNotificationService nullService = new SmsNotificationService(null);
         setField(nullService, "parkingName", "Test Parking");
-        setField(nullService, "frontendUrl", "http://localhost:3000");
+        setField(nullService, "twilioPhoneNumber", "+10000000000");
+        setField(nullService, "twilioWhatsappNumber", "+10000000001");
 
-        // Should not throw
         assertDoesNotThrow(() ->
                 nullService.sendEntrySms("+573001234567", "ABC-123", LocalDateTime.now()));
     }
 
     @Test
+    @DisplayName("null initializer - WhatsApp not sent")
+    void nullInitializer_whatsAppNotSent() throws Exception {
+        SmsNotificationService nullService = new SmsNotificationService(null);
+        setField(nullService, "parkingName", "Test Parking");
+        setField(nullService, "twilioPhoneNumber", "+10000000000");
+        setField(nullService, "twilioWhatsappNumber", "+10000000001");
+
+        assertDoesNotThrow(() ->
+                nullService.sendExitWhatsApp("+573001234567", "ABC-123", 60, 25.00, "https://buy.stripe.com/test"));
+    }
+
+    @Test
     @DisplayName("sendEntrySms - success")
     void sendEntrySms_success() {
-        when(snsClient.publish(any(PublishRequest.class)))
-                .thenReturn(PublishResponse.builder().messageId("msg_1").build());
+        try (MockedStatic<Message> messageMock = Mockito.mockStatic(Message.class)) {
+            MessageCreator creator = mock(MessageCreator.class);
+            Message message = mock(Message.class);
+            when(creator.create()).thenReturn(message);
+            messageMock.when(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), anyString()
+            )).thenReturn(creator);
 
-        service.sendEntrySms("+573001234567", "ABC-123", LocalDateTime.of(2025, 1, 15, 10, 30));
+            service.sendEntrySms("+573001234567", "ABC-123", LocalDateTime.of(2025, 1, 15, 10, 30));
 
-        ArgumentCaptor<PublishRequest> captor = ArgumentCaptor.forClass(PublishRequest.class);
-        verify(snsClient).publish(captor.capture());
-
-        PublishRequest request = captor.getValue();
-        assertEquals("+573001234567", request.phoneNumber());
-        assertTrue(request.message().contains("ABC-123"));
-        assertTrue(request.message().contains("10:30"));
-        assertTrue(request.message().contains("Test Parking"));
+            messageMock.verify(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), contains("ABC-123")
+            ));
+        }
     }
 
     @Test
     @DisplayName("sendExitSms - success with correct format")
     void sendExitSms_success() {
-        when(snsClient.publish(any(PublishRequest.class)))
-                .thenReturn(PublishResponse.builder().messageId("msg_2").build());
+        try (MockedStatic<Message> messageMock = Mockito.mockStatic(Message.class)) {
+            MessageCreator creator = mock(MessageCreator.class);
+            Message message = mock(Message.class);
+            when(creator.create()).thenReturn(message);
+            messageMock.when(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), anyString()
+            )).thenReturn(creator);
 
-        service.sendExitSms("+573001234567", "ABC-123", 120, 50.00, 42L);
+            service.sendExitSms("+573001234567", "ABC-123", 120, 50.00, "https://buy.stripe.com/test42");
 
-        ArgumentCaptor<PublishRequest> captor = ArgumentCaptor.forClass(PublishRequest.class);
-        verify(snsClient).publish(captor.capture());
-
-        PublishRequest request = captor.getValue();
-        assertTrue(request.message().contains("120min"));
-        assertTrue(request.message().contains("$50.00"));
-        assertTrue(request.message().contains("http://localhost:3000/pay/42"));
+            messageMock.verify(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), contains("buy.stripe.com/test42")
+            ));
+        }
     }
 
     @Test
-    @DisplayName("sendEntrySms - SNS error handled gracefully")
-    void sendEntrySms_error() {
-        when(snsClient.publish(any(PublishRequest.class)))
-                .thenThrow(new RuntimeException("SNS down"));
+    @DisplayName("sendExitWhatsApp - success with whatsapp prefix")
+    void sendExitWhatsApp_success() {
+        try (MockedStatic<Message> messageMock = Mockito.mockStatic(Message.class)) {
+            MessageCreator creator = mock(MessageCreator.class);
+            Message message = mock(Message.class);
+            when(creator.create()).thenReturn(message);
+            messageMock.when(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), anyString()
+            )).thenReturn(creator);
 
-        assertDoesNotThrow(() ->
-                service.sendEntrySms("+573001234567", "ABC-123", LocalDateTime.now()));
+            service.sendExitWhatsApp("+573001234567", "ABC-123", 60, 25.00, "https://buy.stripe.com/test7");
+
+            messageMock.verify(() -> Message.creator(
+                    eq(new PhoneNumber("whatsapp:+573001234567")),
+                    eq(new PhoneNumber("whatsapp:+10000000001")),
+                    contains("buy.stripe.com/test7")
+            ));
+        }
+    }
+
+    @Test
+    @DisplayName("sendEntrySms - Twilio error handled gracefully")
+    void sendEntrySms_error() {
+        try (MockedStatic<Message> messageMock = Mockito.mockStatic(Message.class)) {
+            MessageCreator creator = mock(MessageCreator.class);
+            when(creator.create()).thenThrow(new RuntimeException("Twilio down"));
+            messageMock.when(() -> Message.creator(
+                    any(PhoneNumber.class), any(PhoneNumber.class), anyString()
+            )).thenReturn(creator);
+
+            assertDoesNotThrow(() ->
+                    service.sendEntrySms("+573001234567", "ABC-123", LocalDateTime.now()));
+        }
     }
 }

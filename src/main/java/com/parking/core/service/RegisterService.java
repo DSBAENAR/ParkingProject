@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.parking.core.model.Register;
 import com.parking.core.model.Vehicle;
 import com.parking.core.model.dto.RegisterEntryRequest;
+import com.parking.core.payment.Requests.SendPaymentLinkRequest;
+import com.parking.core.payment.services.StripePaymentLinkService;
 import com.parking.core.repository.RegisterRepository;
 import com.parking.core.repository.VehicleRepository;
 
@@ -32,17 +35,23 @@ public class RegisterService {
 
     private static final Logger log = LoggerFactory.getLogger(RegisterService.class);
 
+    @Value("${parking.frontend-url}")
+    private String frontendUrl;
+
     private final RegisterRepository registerRepository;
     private final VehicleRepository vehicleRepository;
     private final ParkingService parkingService;
     private final SmsNotificationService smsNotificationService;
+    private final StripePaymentLinkService stripePaymentLinkService;
 
     public RegisterService(RegisterRepository registerRepository, VehicleRepository vehicleRepository,
-                           ParkingService parkingService, SmsNotificationService smsNotificationService) {
+                           ParkingService parkingService, SmsNotificationService smsNotificationService,
+                           StripePaymentLinkService stripePaymentLinkService) {
         this.registerRepository = registerRepository;
         this.vehicleRepository = vehicleRepository;
         this.parkingService = parkingService;
         this.smsNotificationService = smsNotificationService;
+        this.stripePaymentLinkService = stripePaymentLinkService;
     }
 
     /**
@@ -86,6 +95,7 @@ public class RegisterService {
         Register register = new Register(vehicle);
         register.setEntrydate(LocalDateTime.now());
         register.setPhoneNumber(request.phoneNumber());
+        register.setNotificationChannel(request.notificationChannel());
 
         Register saved = registerRepository.save(register);
         log.info("Vehicle {} entered parking - Register #{}", vehicle.getId(), saved.getId());
@@ -122,10 +132,80 @@ public class RegisterService {
 
         if (saved.getPhoneNumber() != null && !saved.getPhoneNumber().isBlank()) {
             double amount = parkingService.calculatePaymentForRegister(saved);
-            smsNotificationService.sendExitSms(
-                    saved.getPhoneNumber(), vehicle.getId(), minutes, amount, saved.getId());
+            String payUrl = stripePaymentLinkService.createPaymentLink(amount, saved.getId());
+            if (payUrl == null) {
+                payUrl = frontendUrl + "/pay/" + saved.getId();
+            }
+            if ("whatsapp".equals(saved.getNotificationChannel())) {
+                smsNotificationService.sendExitWhatsApp(
+                        saved.getPhoneNumber(), vehicle.getId(), minutes, amount, payUrl);
+            } else {
+                smsNotificationService.sendExitSms(
+                        saved.getPhoneNumber(), vehicle.getId(), minutes, amount, payUrl);
+            }
         }
 
         return saved;
+    }
+
+    /**
+     * Closes the active register for a vehicle and sends a Stripe Payment Link
+     * to the provided phone number via the specified channel (sms/whatsapp).
+     */
+    public void leaveVehicleAndSendLink(SendPaymentLinkRequest request) {
+        Vehicle vehicle = vehicleRepository.findById(request.vehicleId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Vehicle " + request.vehicleId() + " not found"));
+
+        Register saved;
+        java.util.Optional<Register> activeOpt = registerRepository.findByVehicleAndExitdateIsNull(vehicle);
+
+        if (activeOpt.isPresent()) {
+            // Vehicle still inside — close the register
+            Register active = activeOpt.get();
+            active.setExitdate(LocalDateTime.now());
+            int minutes = (int) ChronoUnit.MINUTES.between(active.getEntrydate(), active.getExitdate());
+            active.setMinutes(minutes);
+            saved = registerRepository.save(active);
+        } else {
+            // Vehicle already exited — use most recent completed register
+            saved = registerRepository.findTopByVehicleOrderByExitdateDesc(vehicle)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "No registers found for vehicle"));
+        }
+
+        double amount = parkingService.calculatePaymentForRegister(saved);
+        String payUrl = stripePaymentLinkService.createPaymentLink(amount, saved.getId());
+        if (payUrl == null) {
+            payUrl = frontendUrl + "/pay/" + saved.getId();
+        }
+
+        int minutes = saved.getMinutes();
+        log.info("Sending payment link for register #{} to {} via {}", saved.getId(), request.phoneNumber(), request.channel());
+        if ("whatsapp".equalsIgnoreCase(request.channel())) {
+            smsNotificationService.sendExitWhatsApp(request.phoneNumber(), vehicle.getId(), minutes, amount, payUrl);
+        } else {
+            smsNotificationService.sendExitSms(request.phoneNumber(), vehicle.getId(), minutes, amount, payUrl);
+        }
+    }
+
+    /**
+     * Closes the active register for a vehicle without sending any notification (cash payment).
+     */
+    public void leaveVehicleCash(String vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Vehicle " + vehicleId + " not found"));
+
+        Register existing = registerRepository.findByVehicleAndExitdateIsNull(vehicle)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No active register found for vehicle"));
+
+        existing.setExitdate(LocalDateTime.now());
+        int minutes = (int) ChronoUnit.MINUTES.between(existing.getEntrydate(), existing.getExitdate());
+        existing.setMinutes(minutes);
+        registerRepository.save(existing);
+
+        log.info("Cash payment registered for vehicle {} - {} minutes", vehicleId, minutes);
     }
 }
