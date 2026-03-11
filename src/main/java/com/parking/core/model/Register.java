@@ -46,6 +46,9 @@ public class Register {
     @Column(name = "phone_number")
     String phoneNumber;
 
+    @Column(name = "notification_channel")
+    String notificationChannel;
+
     public Register(){}
 
     public Register(Vehicle vehicle) {
@@ -98,5 +101,13 @@ public class Register {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getNotificationChannel() {
+        return notificationChannel;
+    }
+
+    public void setNotificationChannel(String notificationChannel) {
+        this.notificationChannel = notificationChannel;
     }
 }

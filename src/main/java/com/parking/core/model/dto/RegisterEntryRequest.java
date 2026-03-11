@@ -9,5 +9,6 @@ import jakarta.validation.constraints.Pattern;
 public record RegisterEntryRequest(
     @NotBlank String vehicleId,
     @NotNull VehicleType vehicleType,
-    @Pattern(regexp = "^\\+?[1-9]\\d{6,14}$") String phoneNumber
+    @Pattern(regexp = "^\\+?[1-9]\\d{6,14}$") String phoneNumber,
+    String notificationChannel
 ) {}
